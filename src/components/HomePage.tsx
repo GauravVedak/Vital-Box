@@ -12,6 +12,7 @@ import {
   Award,
   TrendingUp,
   Users,
+  User,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
@@ -243,6 +244,27 @@ export function HomePage() {
                 </span>
               </motion.button>
             </motion.div>
+
+            {/* User Panel Button - Visible when signed in */}
+            {user && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="mt-6 flex justify-center lg:justify-start"
+              >
+                <motion.button
+                  onClick={() => window.location.hash = '#user-panel'}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 bg-white/90 backdrop-blur-xl border-2 border-emerald-300 text-emerald-600 rounded-2xl hover:bg-emerald-50 transition-all flex items-center gap-2 shadow-lg"
+                  style={{ fontSize: '1rem', fontWeight: 600 }}
+                >
+                  <User className="w-5 h-5" />
+                  <span>My User Panel</span>
+                </motion.button>
+              </motion.div>
+            )}
 
             {/* Trust Badges */}
             <motion.div

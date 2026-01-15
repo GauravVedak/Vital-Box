@@ -6,6 +6,7 @@ import { ChooseBoxPage } from "./components/ChooseBoxPage";
 import { BMICalculatorPage } from "./components/BMICalculatorPage";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
+import { UserPanel } from "./components/UserPanel";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { AIRecommendationProvider } from "./components/AIRecommendationEngine";
 import { Toaster } from "./components/ui/sonner";
@@ -34,7 +35,7 @@ function AppContent() {
   }, []);
 
   // Protected pages that require authentication
-  const protectedPages = ["bmi", "ai-advisor", "choose-box"];
+  const protectedPages = ["bmi", "ai-advisor", "choose-box", "user-panel"];
   const isProtectedPage = protectedPages.includes(currentPage);
 
   // If user tries to access protected page without being logged in
@@ -97,11 +98,17 @@ function AppContent() {
   return (
     <>
       <div className="relative z-10">
-        <MinimalNavbar onSignInClick={handleSignInClick} />
-        {currentPage === "bmi" && user && <BMICalculatorPage onSignInClick={handleSignInClick} />}
-        {currentPage === "ai-advisor" && user && <AIAdvisorPage onSignInClick={handleSignInClick} />}
-        {currentPage === "choose-box" && user && <ChooseBoxPage onSignInClick={handleSignInClick} />}
-        {currentPage === "home" && <HomePage />}
+        {currentPage === "user-panel" && user ? (
+          <UserPanel />
+        ) : (
+          <>
+            <MinimalNavbar onSignInClick={handleSignInClick} />
+            {currentPage === "bmi" && user && <BMICalculatorPage onSignInClick={handleSignInClick} />}
+            {currentPage === "ai-advisor" && user && <AIAdvisorPage onSignInClick={handleSignInClick} />}
+            {currentPage === "choose-box" && user && <ChooseBoxPage onSignInClick={handleSignInClick} />}
+            {currentPage === "home" && <HomePage />}
+          </>
+        )}
       </div>
       <Toaster />
     </>
