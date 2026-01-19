@@ -31,17 +31,31 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
+  const API_BASE = typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "";
+
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock successful login
-    setUser({
-      id: "1",
-      name: email.split("@")[0],
-      email: email,
-    });
-    return true;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      setUser({
+        id: data.user.email, // or data.user.id if available
+        name: data.user.name || data.user.email.split("@")[0],
+        email: data.user.email,
+      });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const loginWithSocial = async (provider: string): Promise<boolean> => {
@@ -61,20 +75,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<boolean> => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock successful signup
-    setUser({
-      id: "1",
-      name: name,
-      email: email,
-    });
-    return true;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      // Optionally auto-login after signup
+      return await login(email, password);
+    } catch {
+      return false;
+    }
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("token");
   };
 
   const updateFitnessMetrics = (metrics: FitnessMetrics) => {
