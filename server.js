@@ -4,6 +4,8 @@ const { env } = require("./src/config/env");
 
 async function start() {
 	try {
+		await connectDatabase();
+		console.log("Connected to MongoDB");
 		app.listen(env.port, () => {
 			console.log(`API listening on port ${env.port}`);
 		});

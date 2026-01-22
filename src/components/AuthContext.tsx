@@ -32,7 +32,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
+  const API_BASE = typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "";
+
   const login = async (email: string, password: string): Promise<boolean> => {
+<<<<<<< HEAD
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
@@ -44,6 +49,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: password === "admin123" ? "admin" : "user",
     });
     return true;
+=======
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      setUser({
+        id: data.user.email, // or data.user.id if available
+        name: data.user.name || data.user.email.split("@")[0],
+        email: data.user.email,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+>>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const loginWithSocial = async (provider: string): Promise<boolean> => {
@@ -64,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<boolean> => {
+<<<<<<< HEAD
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
@@ -75,10 +103,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: password === "admin123" ? "admin" : "user",
     });
     return true;
+=======
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        return false;
+      }
+      // Optionally auto-login after signup
+      return await login(email, password);
+    } catch {
+      return false;
+    }
+>>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("token");
   };
 
   const updateFitnessMetrics = (metrics: FitnessMetrics) => {
