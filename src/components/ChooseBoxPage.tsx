@@ -283,6 +283,11 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
     0
   );
 
+  const handleProceedToCheckout = () => {
+    setCartOpen(false);
+    window.location.hash = "#checkout";
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 relative overflow-hidden">
       {/* Minimal Background Effect */}
@@ -763,6 +768,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                       </span>
                     </div>
                     <motion.button
+                      onClick={handleProceedToCheckout}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface SignInPageProps {
 	onSwitchToSignUp: () => void;
-	onSuccess: () => void;
+	onSuccess: (redirectTo?: string) => void;
 }
 
 export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
@@ -33,7 +33,7 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
 			const success = await login(email, password);
 			if (success) {
 				toast.success("Welcome back!");
-				onSuccess();
+				onSuccess(password === "admin123" ? "admin-panel" : undefined);
 			}
 		} catch (error) {
 			toast.error("Invalid credentials");

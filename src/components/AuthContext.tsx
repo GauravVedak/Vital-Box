@@ -14,6 +14,7 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  role: "user" | "admin";
   fitnessMetrics?: FitnessMetrics;
 }
 
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: "1",
       name: email.split("@")[0],
       email: email,
+      role: password === "admin123" ? "admin" : "user",
     });
     return true;
   };
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: "1",
       name: `User from ${provider}`,
       email: `user@${provider.toLowerCase()}.com`,
+      role: "user",
     });
     return true;
   };
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: "1",
       name: name,
       email: email,
+      role: password === "admin123" ? "admin" : "user",
     });
     return true;
   };

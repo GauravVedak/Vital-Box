@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface SignUpPageProps {
 	onSwitchToSignIn: () => void;
-	onSuccess: () => void;
+	onSuccess: (redirectTo?: string) => void;
 }
 
 export function SignUpPage({ onSwitchToSignIn, onSuccess }: SignUpPageProps) {
@@ -46,7 +46,7 @@ export function SignUpPage({ onSwitchToSignIn, onSuccess }: SignUpPageProps) {
 			const success = await signup(fullName, email, password);
 			if (success) {
 				toast.success("Account created successfully!");
-				onSuccess();
+				onSuccess(password === "admin123" ? "admin-panel" : undefined);
 			}
 		} catch (error) {
 			toast.error("Failed to create account");
