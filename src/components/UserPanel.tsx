@@ -312,9 +312,9 @@ export function UserPanel() {
 												Update Body Stats
 											</motion.button>
 										</div>
-									<ChartContainer
-										config={chartConfig}
-										className="h-[400px] w-full"
+										<ChartContainer
+											config={chartConfig}
+											className="h-[400px] w-full"
 										>
 											<LineChart data={weightHistory}>
 												<CartesianGrid

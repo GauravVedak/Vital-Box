@@ -14,6 +14,7 @@ interface User {
   name: string;
   email: string;
   avatar?: string;
+  role: "user" | "admin";
   fitnessMetrics?: FitnessMetrics;
 }
 
@@ -36,6 +37,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     : "";
 
   const login = async (email: string, password: string): Promise<boolean> => {
+<<<<<<< HEAD
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // Mock successful login
+    setUser({
+      id: "1",
+      name: email.split("@")[0],
+      email: email,
+      role: password === "admin123" ? "admin" : "user",
+    });
+    return true;
+=======
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
@@ -56,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return false;
     }
+>>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const loginWithSocial = async (provider: string): Promise<boolean> => {
@@ -66,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: "1",
       name: `User from ${provider}`,
       email: `user@${provider.toLowerCase()}.com`,
+      role: "user",
     });
     return true;
   };
@@ -75,6 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<boolean> => {
+<<<<<<< HEAD
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // Mock successful signup
+    setUser({
+      id: "1",
+      name: name,
+      email: email,
+      role: password === "admin123" ? "admin" : "user",
+    });
+    return true;
+=======
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
@@ -89,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return false;
     }
+>>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const logout = () => {

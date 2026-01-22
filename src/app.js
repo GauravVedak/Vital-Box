@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+/* eslint-disable @typescript-eslint/no-require-imports */
+const express = require("express");
+const app = express();
+=======
+>>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
 
 
 const express = require("express");
