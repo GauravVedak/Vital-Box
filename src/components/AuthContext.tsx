@@ -32,57 +32,50 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
-  const API_BASE = typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "";
+  const API_BASE =
+    typeof window !== "undefined" && window.location.hostname === "localhost"
+      ? "http://localhost:5000"
+      : "";
 
   const login = async (email: string, password: string): Promise<boolean> => {
-<<<<<<< HEAD
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock successful login
-    setUser({
-      id: "1",
-      name: email.split("@")[0],
-      email: email,
-      role: password === "admin123" ? "admin" : "user",
-    });
-    return true;
-=======
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
+
       if (!res.ok) {
         return false;
       }
+
       const data = await res.json();
       localStorage.setItem("token", data.token);
+
       setUser({
-        id: data.user.email, // or data.user.id if available
+        id: data.user.email, // adjust if backend returns an id
         name: data.user.name || data.user.email.split("@")[0],
         email: data.user.email,
+        role: "user"
       });
+
       return true;
     } catch {
       return false;
     }
->>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const loginWithSocial = async (provider: string): Promise<boolean> => {
-    // Simulate social login
+    // Still mocked for now
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     setUser({
       id: "1",
       name: `User from ${provider}`,
       email: `user@${provider.toLowerCase()}.com`,
-      role: "user",
+      role: "user"
     });
+
     return true;
   };
 
@@ -91,34 +84,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<boolean> => {
-<<<<<<< HEAD
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock successful signup
-    setUser({
-      id: "1",
-      name: name,
-      email: email,
-      role: password === "admin123" ? "admin" : "user",
-    });
-    return true;
-=======
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password })
       });
+
       if (!res.ok) {
         return false;
       }
+
       // Optionally auto-login after signup
       return await login(email, password);
     } catch {
       return false;
     }
->>>>>>> 97d42e2b9301784ed0ecc25ac9970eba71b71e93
   };
 
   const logout = () => {
@@ -133,8 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fitnessMetrics: {
           ...user.fitnessMetrics,
           ...metrics,
-          lastCalculated: new Date(),
-        },
+          lastCalculated: new Date()
+        }
       });
     }
   };
