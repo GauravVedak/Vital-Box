@@ -58,7 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: auth0User.name || auth0User.nickname || "User",
         email: auth0User.email || "",
         avatar: auth0User.picture || undefined,
-        // Check if user email contains "admin" or matches admin criteria
         role: auth0User.email?.includes("admin") ? "admin" : "user",
         fitnessMetrics: fitnessMetrics,
       });
@@ -122,12 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return true;
   };
 
-  // Social login - redirects to Auth0 with connection hint
+  // Social login - redirects to Auth0 with connection hint (Google only)
   const loginWithSocial = async (provider: string): Promise<boolean> => {
     const connectionMap: Record<string, string> = {
       Google: "google-oauth2",
-      Apple: "apple",
-      Microsoft: "windowslive",
     };
     const connection = connectionMap[provider] || provider.toLowerCase();
     window.location.href = `/auth/login?connection=${connection}`;

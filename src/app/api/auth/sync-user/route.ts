@@ -1,64 +1,75 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth0 } from "@/lib/auth0";
+import { getDb } from "../../../../lib/mongodb";
 
+/**
+ * Syncs Auth0 user to MongoDB using Naveed's DB structure:
+ * getDb("Users"), collection "userdata", with name, email, auth0UserId, fitnessMetrics.
+ * Auth0 users have no passwordHash.
+ */
 export async function POST(request: NextRequest) {
   try {
-    console.log("Sync user API route called");
-    
-    // Get the Auth0 session
     const session = await auth0.getSession(request);
-    
+
     if (!session || !session.user) {
-      console.log("No Auth0 session found");
       return NextResponse.json(
         { message: "Not authenticated" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const { user } = session;
-    console.log("Auth0 user data:", { 
-      sub: user.sub, 
-      email: user.email, 
-      name: user.name 
-    });
+    const user = session.user;
+    const auth0UserId = user.sub;
+    const email = user.email;
+    const name = user.name ?? user.nickname ?? "";
 
-    // Call the Express backend to sync user to MongoDB
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const syncResponse = await fetch(`${API_BASE}/api/auth/sync-auth0-user`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        auth0UserId: user.sub,
-        email: user.email,
-        name: user.name || user.nickname,
-        picture: user.picture,
-      }),
-    });
-
-    if (!syncResponse.ok) {
-      const errorData = await syncResponse.json();
-      console.error("Failed to sync user to MongoDB:", errorData);
+    if (!email) {
       return NextResponse.json(
-        { message: "Failed to sync user", error: errorData },
-        { status: syncResponse.status }
+        { message: "User has no email" },
+        { status: 400 },
       );
     }
 
-    const syncData = await syncResponse.json();
-    console.log("User synced successfully to MongoDB:", syncData);
-    
+    const db = await getDb("Users");
+    const col = db.collection("userdata");
+
+    await col.updateOne(
+      { $or: [{ auth0UserId }, { email }] },
+      {
+        $set: {
+          name,
+          email,
+          auth0UserId,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+          fitnessMetrics: {},
+        },
+      },
+      { upsert: true },
+    );
+
+    const saved = await col.findOne({ email });
     return NextResponse.json({
       message: "User synced successfully",
-      ...syncData,
+      user: saved
+        ? {
+            id: saved._id.toString(),
+            email: saved.email,
+            name: saved.name,
+            auth0UserId: saved.auth0UserId,
+          }
+        : undefined,
     });
   } catch (error) {
     console.error("Error in sync user route:", error);
     return NextResponse.json(
-      { message: "Internal server error", error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+      {
+        message: "Internal server error",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     );
   }
 }
