@@ -3,9 +3,9 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "nodemon server.js",
-		"dev:frontend": "next dev",
+		"dev": "concurrently --names \"API,FRONTEND\" --prefix-colors \"blue,green\" \"npm:dev:api\" \"npm:dev:frontend\"",
 		"dev:api": "nodemon server.js",
+		"dev:frontend": "next dev",
 		"build": "next build",
 		"start": "node server.js",
 		"lint": "eslint"
@@ -38,12 +38,14 @@
 		"tailwind-merge": "^3.4.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20",
+		"@types/node": "^20.19.30",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
+		"concurrently": "^9.2.1",
 		"eslint": "^9",
 		"eslint-config-next": "16.1.1",
 		"nodemon": "^3.1.11",
-		"typescript": "^5"
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.3"
 	}
 }

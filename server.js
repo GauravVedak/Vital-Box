@@ -1,11 +1,13 @@
-// server.js at project root
-const app = require("./src/app");
-const { connectDatabase } = require("./src/config/database");
-const { env } = require("./src/config/env");
+require("dotenv").config();
+const app = require("./src/app.js").default;
+
+const connectDatabase = require("./src/config/database.js");
+
+const { env } = require("./src/config/env.js");
 
 async function start() {
   try {
-    await connectDatabase(); // can comment temporarily
+    await connectDatabase();
     app.listen(env.port || 5000, () => {
       console.log(`API listening on port ${env.port || 5000}`);
     });
