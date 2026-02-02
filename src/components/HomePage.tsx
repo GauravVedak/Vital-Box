@@ -1,133 +1,67 @@
 import { motion } from "motion/react";
-import { 
-  Sparkles, 
-  Shield, 
-  Activity, 
+import {
+  Sparkles,
+  Shield,
+  Activity,
   Zap,
   CheckCircle,
   ArrowRight,
   Heart,
   Brain,
-  Pill,
   Award,
   TrendingUp,
   Users,
   User,
+  Package,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { useAIRecommendations } from "./AIRecommendationEngine";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
+
+const typography = {
+  h1: {
+    fontSize: "clamp(2.5rem, 5vw, 4rem)",
+    fontWeight: 700,
+    lineHeight: 1.1,
+    letterSpacing: "-0.04em",
+  } as const,
+  h2: {
+    fontSize: "clamp(2rem, 4vw, 3rem)",
+    fontWeight: 700,
+    lineHeight: 1.15,
+    letterSpacing: "-0.03em",
+  } as const,
+  h3: {
+    fontSize: "1.25rem",
+    fontWeight: 700,
+    lineHeight: 1.3,
+  } as const,
+  body: {
+    fontSize: "1.125rem",
+    lineHeight: 1.7,
+    fontWeight: 400,
+  } as const,
+  bodySm: {
+    fontSize: "0.875rem",
+    lineHeight: 1.6,
+    fontWeight: 500,
+  } as const,
+  eyebrow: {
+    fontSize: "0.75rem",
+    letterSpacing: "0.15em",
+    textTransform: "uppercase" as const,
+    fontWeight: 600,
+  } as const,
+};
+
 export function HomePage() {
   const { user } = useAuth();
-  const { getRecommendations, getAIInsights } = useAIRecommendations();
-  const [activePersona, setActivePersona] = useState(0);
-
-  // Animated background component
-  const AnimatedBackground = () => (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Clinical Grid */}
-      <div 
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #10b981 1px, transparent 1px),
-            linear-gradient(to bottom, #10b981 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px'
-        }}
-      />
-
-      {/* Floating Molecules */}
-      {[...Array(12)].map((_, i) => (
-        <motion.div
-          key={`molecule-${i}`}
-          className="absolute w-2 h-2 rounded-full bg-emerald-400/20"
-          style={{
-            left: `${10 + i * 8}%`,
-            top: `${15 + (i % 3) * 30}%`,
-          }}
-          animate={{
-            y: [0, -40, 0],
-            x: [0, Math.sin(i) * 20, 0],
-            opacity: [0.2, 0.5, 0.2],
-            scale: [1, 1.5, 1],
-          }}
-          transition={{
-            duration: 4 + i * 0.3,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.2,
-          }}
-        />
-      ))}
-
-      {/* ECG Heartbeat Line */}
-      <svg className="absolute top-1/3 left-0 w-full h-32 opacity-10" viewBox="0 0 1200 100">
-        <motion.path
-          d="M0,50 L200,50 L220,30 L240,70 L260,50 L1200,50"
-          stroke="url(#ecgGradient)"
-          strokeWidth="2"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        />
-        <defs>
-          <linearGradient id="ecgGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="50%" stopColor="#14b8a6" />
-            <stop offset="100%" stopColor="#06b6d4" />
-          </linearGradient>
-        </defs>
-      </svg>
-
-      {/* Gradient Orbs */}
-      <motion.div
-        className="absolute top-1/4 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-emerald-200/10 to-teal-200/10 rounded-full blur-3xl"
-        animate={{
-          x: [0, 50, 0],
-          y: [0, -30, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-1/4 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-teal-200/10 to-cyan-200/10 rounded-full blur-3xl"
-        animate={{
-          x: [0, -40, 0],
-          y: [0, 40, 0],
-          scale: [1, 1.15, 1],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-cyan-200/5 to-emerald-200/5 rounded-full blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 180, 360],
-        }}
-        transition={{
-          duration: 30,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-    </div>
-  );
+  const { getRecommendations } = useAIRecommendations();
 
   // Hero Section
   const HeroSection = () => (
-    <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-20">
+    <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-24">
       <div className="max-w-7xl mx-auto w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left: Content */}
@@ -137,34 +71,12 @@ export function HomePage() {
             transition={{ duration: 0.8 }}
             className="text-center lg:text-left"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-8"
-            >
-              <motion.div
-                animate={{ rotate: [0, 360] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              >
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-              </motion.div>
-              <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Medical AI Verified
-              </span>
-              <motion.div
-                className="w-2 h-2 rounded-full bg-emerald-500"
-                animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            </motion.div>
-
-            <h1 className="mb-6 tracking-tight leading-tight" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 700 }}>
+            <h1 className="mb-6 tracking-tight leading-tight" style={typography.h1}>
               <motion.span
                 className="block"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.2 }}
               >
                 Supplements Tailored
               </motion.span>
@@ -172,69 +84,74 @@ export function HomePage() {
                 className="block"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
               >
-                To You.{" "}
+                To You{"  "}
                 <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                  Powered by AI.
+                  Clinically Verified, AI-Powered.
                 </span>
-              </motion.span>
-              <motion.span
-                className="block"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                Trusted by Medicine.
               </motion.span>
             </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="text-gray-600 mb-10 max-w-xl mx-auto lg:mx-0"
-              style={{ fontSize: '1.125rem', lineHeight: 1.7 }}
-            >
-              AI studies your BMI and goals; our providers are clinically verified for safety and results.
-            </motion.p>
-
+            {/* Mission / why strip in hero */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+              transition={{ delay: 0.5 }}
+              className="mb-8 flex flex-col gap-3 max-w-xl mx-auto lg:mx-0"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 w-fit mx-auto lg:mx-0">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span className="text-emerald-700" style={typography.eyebrow}>
+                  Built to make supplementation safer
+                </span>
+              </div>
+              <p className="text-gray-700" style={typography.bodySm}>
+                We exist because the supplement aisle is confusing and often unsafe.
+                Vital Box uses AI and medical logic to keep you away from guesswork and
+                risky combinations.
+              </p>
+            </motion.div>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               <motion.button
-                onClick={() => window.location.hash = '#bmi'}
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(16, 185, 129, 0.3)" }}
+                onClick={() => (window.location.hash = "#bmi")}
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 20px 40px rgba(16, 185, 129, 0.3)",
+                }}
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white rounded-2xl shadow-xl relative overflow-hidden group"
-                style={{ fontSize: '1.125rem', fontWeight: 600 }}
+                style={{ ...typography.body, fontWeight: 600 }}
               >
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-500"
-                  initial={{ x: "100%" }}
-                  whileHover={{ x: 0 }}
-                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"
                 />
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  Get Safe AI Suggestions
+                  Take the Instant AI Quiz
                   <ArrowRight className="w-5 h-5" />
                 </span>
               </motion.button>
 
               <motion.button
                 onClick={() => {
-                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                  document
+                    .getElementById("how-it-works")
+                    ?.scrollIntoView({ behavior: "smooth" });
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-4 bg-white/80 backdrop-blur-xl border-2 border-gray-200 text-gray-700 rounded-2xl hover:border-emerald-300 transition-all"
-                style={{ fontSize: '1.125rem', fontWeight: 600 }}
+                style={{ ...typography.body, fontWeight: 600 }}
               >
                 <span className="flex items-center justify-center gap-2">
-                  See How It Works
+                  Learn How It Works
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
@@ -250,18 +167,18 @@ export function HomePage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
+                transition={{ delay: 0.7 }}
                 className="mt-6 flex justify-center lg:justify-start"
               >
                 <motion.button
-                  onClick={() => window.location.hash = '#user-panel'}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={() => (window.location.hash = "#user-panel")}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   className="px-6 py-3 bg-white/90 backdrop-blur-xl border-2 border-emerald-300 text-emerald-600 rounded-2xl hover:bg-emerald-50 transition-all flex items-center gap-2 shadow-lg"
-                  style={{ fontSize: '1rem', fontWeight: 600 }}
+                  style={{ ...typography.bodySm, fontWeight: 600 }}
                 >
                   <User className="w-5 h-5" />
-                  <span>My User Panel</span>
+                  <span>Go to my panel</span>
                 </motion.button>
               </motion.div>
             )}
@@ -270,94 +187,147 @@ export function HomePage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.9 }}
-              className="mt-12 flex items-center gap-6 justify-center lg:justify-start flex-wrap"
+              transition={{ delay: 0.8 }}
+              className="mt-10 flex items-center gap-6 justify-center lg:justify-start flex-wrap"
             >
               <div className="flex items-center gap-2 text-gray-600">
                 <Shield className="w-5 h-5 text-emerald-600" />
-                <span className="text-sm" style={{ fontWeight: 500 }}>Clinically Proven</span>
+                <span style={typography.bodySm}>Clinically oriented logic</span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <Activity className="w-5 h-5 text-emerald-600" />
-                <span className="text-sm" style={{ fontWeight: 500 }}>Medical Grade</span>
+                <span style={typography.bodySm}>Goal-aligned planning</span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <CheckCircle className="w-5 h-5 text-emerald-600" />
-                <span className="text-sm" style={{ fontWeight: 500 }}>AI Personalized</span>
+                <span style={typography.bodySm}>AI-assisted safety checks</span>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Right: 3D Product Visualization */}
+          {/* Right: AI + Medical Logic Flow Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
             className="relative"
           >
-            <div className="relative w-full aspect-square max-w-lg mx-auto">
-              {/* Main Product Image */}
-              <motion.div
-                className="relative z-10"
-                animate={{ y: [0, -20, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="w-full h-full bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-2xl rounded-[3rem] border border-gray-200/60 shadow-2xl p-12 flex items-center justify-center">
-                  <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1680265158261-5fd6ba5d9959?w=600"
-                    alt="Vital Box Supplement"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              </motion.div>
+            {/* Soft background glows */}
+            <div className="pointer-events-none absolute -top-10 -right-4 w-40 h-40 bg-emerald-400/30 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute bottom-0 -left-10 w-56 h-56 bg-cyan-400/25 blur-3xl rounded-full" />
 
-              {/* Floating Medical Icons */}
-              {[
-                { icon: Heart, position: { top: '10%', left: '5%' }, delay: 0 },
-                { icon: Brain, position: { top: '15%', right: '10%' }, delay: 0.2 },
-                { icon: Pill, position: { bottom: '20%', left: '8%' }, delay: 0.4 },
-                { icon: Activity, position: { bottom: '15%', right: '5%' }, delay: 0.6 },
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  className="absolute w-16 h-16 bg-white/90 backdrop-blur-xl rounded-2xl border border-emerald-200/50 shadow-xl flex items-center justify-center"
-                  style={item.position}
-                  animate={{
-                    y: [0, -15, 0],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: item.delay,
-                  }}
-                >
-                  <item.icon className="w-8 h-8 text-emerald-600" />
-                </motion.div>
-              ))}
-
-              {/* AI Circuit Badge */}
-              <motion.div
-                className="absolute top-0 right-0 w-24 h-24"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 360],
-                }}
-                transition={{
-                  scale: { duration: 3, repeat: Infinity },
-                  rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                }}
-              >
-                <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-2xl">
-                  <Sparkles className="w-12 h-12 text-white" />
+            <div className="relative w-full max-w-lg mx-auto">
+              <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-gray-200/60 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-8 md:p-10">
+                <div className="flex items-center justify-between mb-7">
+                  <div>
+                    <p className="text-emerald-600 mb-1" style={typography.eyebrow}>
+                      How decisions are made
+                    </p>
+                    <h3 className="text-gray-900" style={typography.h3}>
+                      AI + Medical Logic Flow
+                    </h3>
+                  </div>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-emerald-600" />
+                  </div>
                 </div>
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
+
+                <div className="space-y-2">
+                  {/* Step 1 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        1. You share health basics
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Height, weight, goals, medications, and conditions — always in
+                        your control.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-1" />
+
+                  {/* Step 2 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
+                      <Brain className="w-4 h-4 text-cyan-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        2. AI simulates supplement choices
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Our models compare your profile against medical logic and
+                        interaction rules.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                  {/* Step 3 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        3. Medical standards are applied
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Recommendations are checked against clinical references and
+                        safety constraints.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                  {/* Step 4 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-teal-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        4. You see a clear plan
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        You review a human-readable supplement plan and decide what to
+                        order.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Confidence meter */}
+                <div className="mt-8 p-3 rounded-2xl bg-slate-50 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-slate-900" style={typography.bodySm}>
+                      AI + Medical Confidence Meter
+                    </p>
+                    <p className="text-slate-500" style={typography.bodySm}>
+                      Shows how closely your plan aligns with our safety and efficacy
+                      rules.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
+                      <div className="h-full w-11/12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
+                    </div>
+                    <span className="text-emerald-600" style={typography.bodySm}>
+                      92% match
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -365,264 +335,188 @@ export function HomePage() {
     </section>
   );
 
-  // Personalized Supplement Preview
-  const PersonalizedPicks = () => {
-    const personas = [
-      {
-        goal: "Muscle Gain",
-        icon: TrendingUp,
-        color: "from-blue-500 to-purple-600",
-        products: getRecommendations().filter(r => r.product.goalTags?.includes("muscle-gain")).slice(0, 3),
-      },
-      {
-        goal: "Weight Loss",
-        icon: Activity,
-        color: "from-orange-500 to-red-600",
-        products: getRecommendations().filter(r => r.product.goalTags?.includes("weight-loss")).slice(0, 3),
-      },
-      {
-        goal: "Wellness",
-        icon: Heart,
-        color: "from-emerald-500 to-teal-600",
-        products: getRecommendations().filter(r => r.product.category === "wellness").slice(0, 3),
-      },
-      {
-        goal: "Performance",
-        icon: Zap,
-        color: "from-yellow-500 to-orange-600",
-        products: getRecommendations().filter(r => r.product.category === "performance").slice(0, 3),
-      },
-    ];
+  // Mission
+  const MissionSection = () => (
+    <section className="relative py-32 px-6 bg-gradient-to-b from-white to-emerald-50/30">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-3xl mx-auto text-center mb-14"
+        >
+          <p className="text-emerald-700 mb-3" style={typography.eyebrow}>
+            Why Vital Box exists
+          </p>
+          <h2 className="text-gray-900 mb-4" style={typography.h2}>
+            The supplement world shouldn’t feel like a gamble.
+          </h2>
+          <p className="text-gray-600" style={typography.body}>
+            Most people are left to piece together advice from ads, trends, and
+            forums. Vital Box exists to bring clarity, safety, and medical logic to
+            everyday supplementation.
+          </p>
+        </motion.div>
 
-    return (
-      <section className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 pt-4">
+          {/* Problem */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            transition={{ delay: 0.05 }}
+            className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl shadow-lg p-6"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Your Personalized Picks
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-2xl bg-rose-50 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-rose-500" />
+              </div>
+              <span className="text-gray-900" style={typography.bodySm}>
+                The Problem
               </span>
             </div>
-            <h2 className="tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700 }}>
-              <span className="text-gray-900">Matched to </span>
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
-                Your Profile
-              </span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={{ fontSize: '1.125rem' }}>
-              AI-curated supplements for every fitness goal, backed by clinical research
+            <p className="text-gray-700" style={typography.body}>
+              The supplement industry is crowded, confusing, and lightly regulated.
+              It’s easy to take too much, combine the wrong products, or follow trends
+              that were never meant for you.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {personas.map((persona, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-white/70 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden"
-              >
-                <div className={`h-2 bg-gradient-to-r ${persona.color}`} />
-                <div className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.color} flex items-center justify-center`}>
-                      <persona.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="text-gray-900" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                      {persona.goal}
-                    </h3>
-                  </div>
-                  
-                  <div className="space-y-3 mb-4">
-                    {persona.products.map((rec, i) => (
-                      <div key={i} className="flex items-center gap-3 p-2 bg-gray-50/50 rounded-xl">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden flex-shrink-0">
-                          <ImageWithFallback
-                            src={rec.product.image}
-                            alt={rec.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 text-xs truncate" style={{ fontWeight: 600 }}>
-                            {rec.product.name}
-                          </p>
-                          <p className="text-emerald-600 text-xs" style={{ fontWeight: 600 }}>
-                            ${rec.product.price}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => window.location.hash = '#choose-box'}
-                    className="w-full py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:border-emerald-300 transition-all text-sm"
-                    style={{ fontWeight: 600 }}
-                  >
-                    View All
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  };
-
-  // Medical Assurance Section
-  const MedicalAssurance = () => {
-    const providers = [
-      { name: "FDA Certified", stat: "100%", icon: Shield },
-      { name: "Lab Tested", stat: "Every Batch", icon: Award },
-      { name: "Medical Grade", stat: "Clinical", icon: CheckCircle },
-      { name: "AI Verified", stat: "Real-time", icon: Sparkles },
-    ];
-
-    return (
-      <section className="relative py-32 px-6 bg-gradient-to-b from-white to-emerald-50/30">
-        <div className="max-w-7xl mx-auto">
+          {/* Solution */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            transition={{ delay: 0.1 }}
+            className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl shadow-lg p-6"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6">
-              <Shield className="w-4 h-4 text-emerald-600" />
-              <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Medical Assurance
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                <Brain className="w-4 h-4 text-emerald-600" />
+              </div>
+              <span className="text-gray-900" style={typography.bodySm}>
+                Our Approach
               </span>
             </div>
-            <h2 className="tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700 }}>
-              <span className="text-gray-900">All Products </span>
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
-                Clinically Verified
-              </span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={{ fontSize: '1.125rem' }}>
-              Sourced exclusively from proven medical providers with rigorous quality standards
+            <p className="text-gray-700" style={typography.body}>
+              We combine your health data with AI models that are grounded in medical
+              logic. Every recommendation is shaped by safety rules, not influencer
+              trends.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {providers.map((provider, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white/70 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl p-8 text-center"
-              >
-                <motion.div
-                  className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                >
-                  <provider.icon className="w-8 h-8 text-emerald-600" />
-                </motion.div>
-                <h3 className="text-gray-900 mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                  {provider.name}
-                </h3>
-                <p className="text-emerald-600" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                  {provider.stat}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+          {/* Values */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-3xl shadow-lg p-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-2xl bg-sky-50 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-sky-600" />
+              </div>
+              <span className="text-gray-900" style={typography.bodySm}>
+                What we stand for
+              </span>
+            </div>
+            <ul className="space-y-2 text-gray-700">
+              <li style={typography.bodySm}>Clinically informed, not hype-driven.</li>
+              <li style={typography.bodySm}>User-first recommendations, always in your control.</li>
+              <li style={typography.bodySm}>AI-assisted, doctor-informed decision logic.</li>
+            </ul>
+          </motion.div>
         </div>
-      </section>
-    );
-  };
+      </div>
+    </section>
+  );
 
-  // How AI Works Section
+  // How It Works / Process Section
   const HowAIWorks = () => {
     const steps = [
       {
         number: "01",
-        title: "Input BMI & Goals",
-        description: "Tell us your height, weight, and fitness objectives",
-        icon: Activity,
+        title: "Share your health basics",
+        description:
+          "Tell us about your height, weight, goals, medications, and existing conditions.",
+        icon: Users,
       },
       {
         number: "02",
-        title: "AI Analyzes Health",
-        description: "Our medical AI processes your unique profile",
+        title: "AI analyzes your profile",
+        description:
+          "Our models process your data against medical logic and supplement interaction rules.",
         icon: Brain,
-        },
+      },
       {
         number: "03",
-        title: "Medical Verification",
-        description: "Recommendations verified against clinical standards",
+        title: "Apply medical standards",
+        description:
+          "Recommendations are filtered through clinical guidelines and safety thresholds.",
         icon: Shield,
       },
       {
         number: "04",
-        title: "Safe Delivery",
-        description: "Premium supplements delivered to your door",
-        icon: CheckCircle,
+        title: "Get your personalized plan",
+        description:
+          "You receive a clear, human-friendly supplement plan that you can adjust and order.",
+        icon: Package,
       },
     ];
 
     return (
-      <section id="how-it-works" className="relative py-32 px-6">
+      <section id="how-it-works" className="relative py-36 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-14"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Your Smarter Pill Path
-              </span>
-            </div>
-            <h2 className="tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700 }}>
-              <span className="text-gray-900">How </span>
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
-                AI Works
-              </span>
+            <p className="text-emerald-700 mb-3" style={typography.eyebrow}>
+              Clear, transparent steps
+            </p>
+            <h2 className="text-gray-900 mb-4" style={typography.h2}>
+              How Vital Box works from quiz to plan.
             </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
+              No mystery algorithms. Just a step-by-step process you can understand
+              and revisit whenever your goals change.
+            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 pt-4">
             {steps.map((step, idx) => (
               <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 30 }}
+                key={step.number}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: idx * 0.15 }}
+                transition={{ delay: idx * 0.1 }}
                 className="relative"
               >
                 <motion.div
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="bg-white/70 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl p-8 h-full"
+                  whileHover={{ y: -6, scale: 1.01 }}
+                  className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl p-8 h-full"
                 >
-                  <div className="text-emerald-600/20 mb-4" style={{ fontSize: '4rem', fontWeight: 700, lineHeight: 1 }}>
+                  <div
+                    className="text-emerald-600/20 mb-4"
+                    style={{
+                      fontSize: "3.5rem",
+                      fontWeight: 700,
+                      lineHeight: 1,
+                    }}
+                  >
                     {step.number}
                   </div>
-                  <div className="w-16 h-16 mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center">
-                    <step.icon className="w-8 h-8 text-emerald-600" />
+                  <div className="w-14 h-14 mb-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center">
+                    <step.icon className="w-7 h-7 text-emerald-600" />
                   </div>
-                  <h3 className="text-gray-900 mb-3" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                  <h3 className="text-gray-900 mb-3" style={typography.h3}>
                     {step.title}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600" style={typography.bodySm}>
                     {step.description}
                   </p>
                 </motion.div>
@@ -637,22 +531,316 @@ export function HomePage() {
     );
   };
 
-  // Instant Quiz CTA
+  // Benefits / Value Proposition Section
+  const BenefitsSection = () => {
+    const benefits = [
+      {
+        icon: Zap,
+        title: "Save time and mental load",
+        description:
+          "Skip hours of research. Go from uncertainty to a clear plan in a few minutes.",
+      },
+      {
+        icon: Shield,
+        title: "Reduce risk of unsafe mixes",
+        description:
+          "Our logic checks for potential conflicts and flags risky combinations before they reach your cart.",
+      },
+      {
+        icon: Brain,
+        title: "Medical logic, not marketing",
+        description:
+          "Recommendations are grounded in clinical references and safety guidelines — not trending hashtags.",
+      },
+      {
+        icon: Heart,
+        title: "Stay aligned with your goals",
+        description:
+          "Your plan evolves with you. Update your goals and see how your recommendations adapt.",
+      },
+    ];
+
+    return (
+      <section className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <p className="text-emerald-700 mb-3" style={typography.eyebrow}>
+              Why Vital Box is worth your time
+            </p>
+            <h2 className="text-gray-900 mb-4" style={typography.h2}>
+              The benefits of personalized, verified supplementation.
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
+              When your supplements match your health story, you’re more likely to
+              stay consistent, safe, and on track with your goals.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+            {benefits.map((benefit, idx) => (
+              <motion.div
+                key={benefit.title}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.08 }}
+                whileHover={{ y: -4 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-6"
+              >
+                <div className="w-10 h-10 mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <benefit.icon className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h3 className="text-gray-900 mb-2" style={typography.h3}>
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-600" style={typography.bodySm}>
+                  {benefit.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Personalized Supplement Preview / Examples
+  const PersonalizedPicks = () => {
+    const personas = [
+      {
+        goal: "Muscle Gain",
+        icon: TrendingUp,
+        color: "from-blue-500 to-purple-600",
+        tag: "muscle-gain",
+      },
+      {
+        goal: "Weight Loss",
+        icon: Activity,
+        color: "from-orange-500 to-red-600",
+        tag: "weight-loss",
+      },
+      {
+        goal: "Wellness / General Health",
+        icon: Heart,
+        color: "from-emerald-500 to-teal-600",
+        category: "wellness",
+      },
+      {
+        goal: "Performance & Energy",
+        icon: Zap,
+        color: "from-yellow-500 to-orange-600",
+        category: "performance",
+      },
+    ];
+
+    const recommendations = getRecommendations();
+
+    return (
+      <section className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <p className="text-emerald-700 mb-3" style={typography.eyebrow}>
+              A glimpse at what you might see
+            </p>
+            <h2 className="text-gray-900 mb-4" style={typography.h2}>
+              Example plans for common health goals.
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
+              Every plan is unique, but here’s how Vital Box might support different
+              health journeys — all AI-verified and logic-checked.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+            {personas.map((persona, idx) => {
+              const products = recommendations
+                .filter((r: any) =>
+                  persona.tag
+                    ? r.product.goalTags?.includes(persona.tag)
+                    : r.product.category === persona.category
+                )
+                .slice(0, 3);
+
+              return (
+                <motion.div
+                  key={persona.goal}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -6 }}
+                  className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden"
+                >
+                  <div className={`h-2 bg-gradient-to-r ${persona.color}`} />
+                  <div className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.color} flex items-center justify-center`}
+                      >
+                        <persona.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="text-gray-900" style={typography.h3}>
+                        {persona.goal}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3 mb-4">
+                      {products.map((rec: any, i: number) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-3 p-2 bg-gray-50/80 rounded-xl"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden flex-shrink-0">
+                            <ImageWithFallback
+                              src={rec.product.image}
+                              alt={rec.product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className="text-gray-900 truncate"
+                              style={{ ...typography.bodySm, fontWeight: 600 }}
+                            >
+                              {rec.product.name}
+                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p
+                                className="text-emerald-600"
+                                style={{ ...typography.bodySm, fontWeight: 600 }}
+                              >
+                                ${rec.product.price}
+                              </p>
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700"
+                                style={typography.bodySm}
+                              >
+                                <CheckCircle className="w-3 h-3" />
+                                AI-verified
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {products.length === 0 && (
+                        <p className="text-gray-500" style={typography.bodySm}>
+                          Your exact picks will appear here after you complete the quiz.
+                        </p>
+                      )}
+                    </div>
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => (window.location.hash = "#bmi")}
+                      className="w-full py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:border-emerald-300 transition-all"
+                      style={{ ...typography.bodySm, fontWeight: 600 }}
+                    >
+                      See my personalized plan
+                    </motion.button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // Medical Assurance / Trust Section
+  const MedicalAssurance = () => {
+    const providers = [
+      { name: "FDA-Aware Logic", stat: "Aligned", icon: Shield },
+      { name: "Lab Tested Inputs", stat: "Every Batch", icon: Award },
+      { name: "Medical-Grade Criteria", stat: "Clinical", icon: CheckCircle },
+      { name: "AI Safety Checks", stat: "Real-time", icon: Sparkles },
+    ];
+
+    return (
+      <section className="relative py-32 px-6 bg-gradient-to-b from-white to-emerald-50/30">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <p className="text-emerald-700 mb-3" style={typography.eyebrow}>
+              Medical assurance & trust
+            </p>
+            <h2 className="text-gray-900 mb-4" style={typography.h2}>
+              Clinically verified. AI-assisted. Built to be trusted.
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
+              Vital Box doesn’t replace medical care, but it does hold itself to
+              medical-grade standards for how recommendations are generated and reviewed.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+            {providers.map((provider, idx) => (
+              <motion.div
+                key={provider.name}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl p-8 text-center"
+              >
+                <motion.div
+                  className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center"
+                  whileHover={{ scale: 1.05, rotate: 2 }}
+                >
+                  <provider.icon className="w-8 h-8 text-emerald-600" />
+                </motion.div>
+                <h3 className="text-gray-900 mb-1" style={typography.h3}>
+                  {provider.name}
+                </h3>
+                <p className="text-emerald-600 mb-3" style={typography.bodySm}>
+                  {provider.stat}
+                </p>
+                <p className="text-gray-500" style={typography.bodySm}>
+                  Each rule in our system is checked against reputable medical
+                  references before it influences your plan.
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  // CTA / Instant Quiz Section
   const InstantQuizCTA = () => (
     <section className="relative py-32 px-6">
       <div className="max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           className="bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 rounded-[3rem] p-12 md:p-16 text-center relative overflow-hidden"
         >
           {/* Animated background pattern */}
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-              backgroundSize: '30px 30px'
-            }} />
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+                backgroundSize: "30px 30px",
+              }}
+            />
           </div>
 
           <motion.div
@@ -672,19 +860,24 @@ export function HomePage() {
               <Sparkles className="w-10 h-10 text-white" />
             </motion.div>
 
-            <h2 className="text-white mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700 }}>
-              Ready to Find Your Perfect Supplements?
+            <h2 className="text-white mb-6" style={typography.h2}>
+              Find your supplement plan in minutes.
             </h2>
-            <p className="text-white/90 mb-8 max-w-2xl mx-auto" style={{ fontSize: '1.125rem' }}>
-              Take our instant AI health quiz and get personalized, medically-verified recommendations in seconds
+            <p
+              className="text-white/90 mb-10 max-w-2xl mx-auto"
+              style={typography.body}
+            >
+              Take our AI health quiz and see a personalized, medically informed
+              supplement plan in seconds. No signup required — just honest questions
+              and clear answers.
             </p>
 
             <motion.button
-              onClick={() => window.location.hash = '#bmi'}
+              onClick={() => (window.location.hash = "#bmi")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-10 py-5 bg-white text-emerald-600 rounded-2xl shadow-2xl inline-flex items-center gap-3 group"
-              style={{ fontSize: '1.25rem', fontWeight: 700 }}
+              style={{ ...typography.body, fontSize: "1.25rem", fontWeight: 700 }}
             >
               Take the AI Quiz Now
               <motion.div
@@ -695,8 +888,11 @@ export function HomePage() {
               </motion.div>
             </motion.button>
 
-            <p className="text-white/80 mt-6 text-sm">
-              No signup required • Takes less than 2 minutes
+            <p
+              className="text-white/80 mt-6 text-sm"
+              style={typography.bodySm}
+            >
+              Most people finish in under 2 minutes.
             </p>
           </div>
         </motion.div>
@@ -704,160 +900,56 @@ export function HomePage() {
     </section>
   );
 
-  // Testimonials
-  const Testimonials = () => {
-    const testimonials = [
-      {
-        name: "Sarah M.",
-        goal: "Weight Loss",
-        feedback: "Lost 15lbs safely with AI recommendations. Every product was clinically verified!",
-        stat: "15lbs lost",
-        rating: 5,
-      },
-      {
-        name: "Mike T.",
-        goal: "Muscle Gain",
-        feedback: "The personalized stack worked perfectly. Medical-grade quality you can trust.",
-        stat: "10kg gained",
-        rating: 5,
-      },
-      {
-        name: "Jessica L.",
-        goal: "Wellness",
-        feedback: "Finally, supplements that actually match my health needs. AI made it simple.",
-        stat: "98% better",
-        rating: 5,
-      },
-    ];
-
-    return (
-      <section className="relative py-32 px-6 bg-gradient-to-b from-white to-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6">
-              <Users className="w-4 h-4 text-emerald-600" />
-              <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Trusted Results
-              </span>
-            </div>
-            <h2 className="tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700 }}>
-              <span className="text-gray-900">Real </span>
-              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
-                Success Stories
-              </span>
-            </h2>
-            <div className="flex items-center justify-center gap-2 text-emerald-600 mb-2">
-              <CheckCircle className="w-5 h-5" />
-              <span style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                98% feel safer with medical-grade AI suggestions
-              </span>
-            </div>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={{ fontSize: '1rem' }}>
-              Need extra guidance? You can get in contact with a physician
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="bg-white/70 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl p-8"
-              >
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + i * 0.1 }}
-                    >
-                      <Award className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    </motion.div>
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 italic">
-                  "{testimonial.feedback}"
-                </p>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div>
-                    <p className="text-gray-900" style={{ fontWeight: 600 }}>
-                      {testimonial.name}
-                    </p>
-                    <p className="text-gray-600 text-sm">{testimonial.goal}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-emerald-600" style={{ fontWeight: 700 }}>
-                      {testimonial.stat}
-                    </p>
-                    <p className="text-gray-600 text-xs">Clinically Improved</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  };
-
   // Minimal Footer
   const MinimalFooter = () => (
-    <footer className="relative py-12 px-6 border-t border-gray-200/50">
-      <div className="max-w-7xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="flex flex-col items-center gap-4"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-gray-900" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              Vital Box
-            </span>
+    <footer className="relative py-12 px-6 border-t border-gray-200/50 bg-white/80 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <p className="text-gray-600 text-sm">
-            Your safety is our top priority—every recommendation is AI-personalized and clinically verified.
-          </p>
-          <p className="text-gray-400 text-xs">
-            © 2025 Vital Box. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-sm">
-            <button className="text-gray-600 hover:text-emerald-600 transition-colors">
-              Privacy Policy
+          <span className="text-gray-900" style={typography.h3}>
+            Vital Box
+          </span>
+        </div>
+        <div className="flex items-center gap-6 text-gray-400">
+          <p style={typography.bodySm}>© 2025 Vital Box. All rights reserved.</p>
+          <div className="hidden md:flex items-center gap-4">
+            <button
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+              style={typography.bodySm}
+            >
+              About
             </button>
-            <button className="text-gray-600 hover:text-emerald-600 transition-colors">
-              Medical Assurance
+            <button
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+              style={typography.bodySm}
+            >
+              Privacy
+            </button>
+            <button
+              className="text-gray-400 hover:text-gray-700 transition-colors"
+              style={typography.bodySm}
+            >
+              Contact
             </button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </footer>
   );
 
   return (
-    <div className="relative min-h-screen bg-white">
-      <AnimatedBackground />
+    <div className="relative min-h-screen bg-[radial-gradient(circle_at_top,_#ecfeff,_#f9fafb_40%,_#eef2ff)]">
+      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-[0.06] mix-blend-soft-light" />
       <div className="relative z-10">
         <HeroSection />
+        <MissionSection />
+        <HowAIWorks />
+        <BenefitsSection />
         <PersonalizedPicks />
         <MedicalAssurance />
-        <HowAIWorks />
         <InstantQuizCTA />
-        <Testimonials />
         <MinimalFooter />
       </div>
     </div>
