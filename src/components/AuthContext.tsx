@@ -8,13 +8,29 @@ import {
   ReactNode,
 } from "react";
 
+interface BMIHistoryEntry {
+  value: number;
+  category: string;
+  date: string; // ISO string
+}
+
+interface LatestBMI {
+  value: number;
+  category: string;
+  height: number;
+  weight: number;
+  unit: "metric" | "imperial";
+  date: string; // ISO string
+}
+
 interface FitnessMetrics {
-  bmi?: number;
+  latestBMI?: LatestBMI;
+  bmiHistory?: BMIHistoryEntry[];
   height?: number;
   weight?: number;
   unit?: "metric" | "imperial";
   goals?: string[];
-  lastCalculated?: Date;
+  lastCalculated?: string; // ISO string
 }
 
 interface User {
@@ -37,7 +53,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<AuthResult>;
   signup: (name: string, email: string, password: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  updateFitnessMetrics: (metrics: FitnessMetrics) => void;
+  updateFitnessMetrics: (metrics: FitnessMetrics) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -134,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.user.name,
           email: data.user.email,
           role: "user",
+          fitnessMetrics: data.user.fitnessMetrics,
         };
         saveUser(u);
       }
@@ -158,18 +175,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateFitnessMetrics = (metrics: FitnessMetrics) => {
-    if (!user) return;
+ const updateFitnessMetrics = async (metrics: FitnessMetrics) => {
+  if (!user) return;
 
-    const updatedMetrics: FitnessMetrics = {
-      ...user.fitnessMetrics,
-      ...metrics,
-      lastCalculated: new Date(),
-    };
+  const now = new Date().toISOString();
+  const latestBMI = metrics.latestBMI ?? user.fitnessMetrics?.latestBMI;
 
-    const updatedUser: User = { ...user, fitnessMetrics: updatedMetrics };
-    saveUser(updatedUser);
+  const previousHistory = user.fitnessMetrics?.bmiHistory ?? [];
+  const historyEntry =
+    latestBMI != null
+      ? {
+          value: latestBMI.value,
+          category: latestBMI.category,
+          date: latestBMI.date ?? now,
+        }
+      : undefined;
+
+  const updatedHistory = historyEntry
+    ? [...previousHistory, historyEntry]
+    : previousHistory;
+
+  const updatedMetrics: FitnessMetrics = {
+    ...user.fitnessMetrics,
+    ...metrics,
+    latestBMI,
+    bmiHistory: updatedHistory,
+    lastCalculated: now,
   };
+
+  const updatedUser: User = { ...user, fitnessMetrics: updatedMetrics };
+  saveUser(updatedUser);
+
+  try {
+    await fetch("/api/user/metrics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        latestBMI,
+        height: updatedMetrics.height,
+        weight: updatedMetrics.weight,
+        unit: updatedMetrics.unit,
+        bmiHistoryEntry: historyEntry,
+        lastCalculated: updatedMetrics.lastCalculated,
+      }),
+    });
+  } catch (e) {
+    console.error("Failed to persist fitness metrics", e);
+  }
+};
 
   return (
     <AuthContext.Provider

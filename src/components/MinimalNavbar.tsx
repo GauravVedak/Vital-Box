@@ -1,6 +1,18 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X, User, LogOut, Activity, Brain, PackageOpen, Home, Zap } from "lucide-react";
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  Activity,
+  Brain,
+  PackageOpen,
+  Home,
+  Zap,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useAuth } from "./AuthContext";
 
@@ -20,7 +32,7 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, logout, bmiData } = useAuth();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,6 +63,16 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
     logout();
     setShowUserMenu(false);
     window.location.hash = "#home";
+  };
+
+  const handleOpenUserPanel = () => {
+    setShowUserMenu(false);
+    window.location.hash = "#user-panel";
+  };
+
+  const handleOpenUserPanelMobile = () => {
+    setMobileMenuOpen(false);
+    window.location.hash = "#user-panel";
   };
 
   return (
@@ -93,9 +115,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                       ? "text-white"
                       : "text-gray-700 hover:text-gray-900"
                   }`}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.05,
-                    transition: { duration: 0.2 }
+                    transition: { duration: 0.2 },
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -117,7 +139,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                     />
                   )}
                   <item.icon className="w-4 h-4 relative z-10" />
-                  <span className="text-sm whitespace-nowrap relative z-10">{item.label}</span>
+                  <span className="text-sm whitespace-nowrap relative z-10">
+                    {item.label}
+                  </span>
                 </motion.a>
               ))}
             </div>
@@ -127,20 +151,19 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
               <div className="relative shrink-0">
                 <motion.button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-gray-900 transition-all duration-200"
-                  whileHover={{ 
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-full text-gray-900 transition-all duration-200"
+                  whileHover={{
                     scale: 1.05,
                     backgroundColor: "rgb(243 244 246)",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)"
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Avatar className="w-6 h-6 border-2 border-emerald-500">
+                  <Avatar className="w-7 h-7 border-2 border-emerald-500">
                     <AvatarFallback className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs">
-                      {user.name.charAt(0).toUpperCase()}
+                      {user.name?.trim().charAt(0).toUpperCase() ?? "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm">{user.name}</span>
                 </motion.button>
 
                 <AnimatePresence>
@@ -155,26 +178,16 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
                         <p className="font-semibold text-gray-900">{user.name}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
-                        {bmiData && (
-                          <motion.div 
-                            className="mt-3 p-2 bg-white/80 rounded-lg"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-emerald-600" />
-                                <span className="text-xs text-gray-600">BMI</span>
-                              </div>
-                              <span className="font-bold text-emerald-600">{bmiData.bmi}</span>
-                            </div>
-                            <div className="mt-1">
-                              <span className="text-xs text-gray-500">{bmiData.category}</span>
-                            </div>
-                          </motion.div>
-                        )}
                       </div>
+
+                      <button
+                        onClick={handleOpenUserPanel}
+                        className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Open User Panel</span>
+                      </button>
+
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-3 flex items-center gap-2 text-red-600 hover:bg-red-50 transition-colors"
@@ -190,9 +203,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
               <motion.button
                 onClick={onSignInClick}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full shrink-0 relative overflow-hidden"
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
-                  boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)"
+                  boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
                 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -214,7 +227,10 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
       <motion.button
         className="md:hidden fixed top-6 right-6 z-50 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center shadow-lg text-white"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        whileHover={{ scale: 1.05, boxShadow: "0 8px 20px rgba(16, 185, 129, 0.4)" }}
+        whileHover={{
+          scale: 1.05,
+          boxShadow: "0 8px 20px rgba(16, 185, 129, 0.4)",
+        }}
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -304,13 +320,16 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                       <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl mb-2">
                         <p className="font-semibold text-gray-900">{user.name}</p>
                         <p className="text-sm text-gray-600">{user.email}</p>
-                        {bmiData && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm text-gray-600">BMI: <strong>{bmiData.bmi}</strong></span>
-                          </div>
-                        )}
                       </div>
+
+                      <button
+                        onClick={handleOpenUserPanelMobile}
+                        className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 rounded-2xl transition-colors mb-2"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Open User Panel</span>
+                      </button>
+
                       <button
                         onClick={handleLogout}
                         className="w-full px-4 py-3 flex items-center gap-2 text-red-600 hover:bg-red-50 rounded-2xl transition-colors"
