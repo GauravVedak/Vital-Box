@@ -1,6 +1,6 @@
+// src/lib/mongodb.ts
 import { MongoClient } from "mongodb";
 
-// support either MONGODB_URI or legacy MONGO_URI env var name
 const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
 const options = {};
 
@@ -14,6 +14,7 @@ let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
 declare global {
+  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
@@ -32,5 +33,5 @@ export default clientPromise;
 
 export async function getDb(dbName?: string) {
   const client = await clientPromise;
-  return client.db(dbName || process.env.MONGODB_DB || process.env.MONGO_DB);
+  return client.db(dbName || process.env.MONGODB_DB || process.env.MONGO_DB || "Users");
 }

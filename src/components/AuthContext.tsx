@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   useContext,
@@ -5,7 +7,6 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useUser } from "@auth0/nextjs-auth0/client";
 
 interface FitnessMetrics {
   bmi?: number;
@@ -33,143 +34,149 @@ interface AuthResult {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  loginWithSocial: (provider: string) => Promise<boolean>;
-  loginWithAuth0: () => void;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  signup: (name: string, email: string, password: string) => Promise<AuthResult>;
+  logout: () => Promise<void>;
   updateFitnessMetrics: (metrics: FitnessMetrics) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_KEY = "currentUser";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user: auth0User, isLoading: auth0Loading } = useUser();
-  const [localUser, setLocalUser] = useState<User | null>(null);
-  const [fitnessMetrics, setFitnessMetrics] = useState<
-    FitnessMetrics | undefined
-  >();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Sync Auth0 user with local user state
+  // Load user from localStorage on first render
   useEffect(() => {
-    if (auth0User) {
-      setLocalUser({
-        id: auth0User.sub || "auth0-user",
-        name: auth0User.name || auth0User.nickname || "User",
-        email: auth0User.email || "",
-        avatar: auth0User.picture || undefined,
-        role: auth0User.email?.includes("admin") ? "admin" : "user",
-        fitnessMetrics: fitnessMetrics,
-      });
-    } else if (!auth0Loading) {
-      setLocalUser(null);
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem(STORAGE_KEY)
+          : null;
+      if (raw) {
+        setUser(JSON.parse(raw));
+      }
+    } catch {
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-  }, [auth0User, auth0Loading, fitnessMetrics]);
+  }, []);
 
-  // Sync Auth0 user to MongoDB when user logs in
-  useEffect(() => {
-    if (auth0User && !auth0Loading) {
-      console.log("Auth0 user detected, syncing to MongoDB...", {
-        auth0UserId: auth0User.sub,
-        email: auth0User.email,
+  const saveUser = (u: User | null) => {
+    setUser(u);
+    if (typeof window === "undefined") return;
+    if (u) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<AuthResult> => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      const syncUserToMongoDB = async () => {
-        try {
-          const response = await fetch("/api/auth/sync-user", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+      const data = await res.json().catch(() => ({}));
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log("✅ User synced to MongoDB successfully:", {
-              status: data.status,
-              userId: data.user?.id,
-              email: data.user?.email,
-              auth0UserId: data.user?.auth0UserId,
-            });
-          } else {
-            const errorData = await response.json();
-            console.error("❌ Failed to sync user to MongoDB:", errorData);
-          }
-        } catch (error) {
-          console.error("❌ Error syncing user to MongoDB:", error);
-        }
-      };
+      if (!res.ok || !data.ok) {
+        return { ok: false, message: data.message || data.error || "Login failed" };
+      }
 
-      syncUserToMongoDB();
+      if (data.user) {
+        const u: User = {
+          id: data.user.id,
+          name: data.user.name ?? data.user.email,
+          email: data.user.email,
+          role: "user",
+          fitnessMetrics: data.user.fitnessMetrics,
+        };
+        saveUser(u);
+      }
+
+      return { ok: true };
+    } catch (err) {
+      console.error("Error during login:", err);
+      return { ok: false, message: "Something went wrong. Please try again." };
     }
-  }, [auth0User, auth0Loading]);
-
-  const API_BASE =
-    typeof window !== "undefined" && window.location.hostname === "localhost"
-      ? "http://localhost:5000"
-      : "";
-
-  // Redirect to Auth0 login
-  const loginWithAuth0 = () => {
-    window.location.href = "/auth/login";
   };
 
-  // Legacy login function - now redirects to Auth0
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Redirect to Auth0 for authentication
-    window.location.href = "/auth/login";
-    return true;
-  };
-
-  // Social login - redirects to Auth0 with connection hint (Google only)
-  const loginWithSocial = async (provider: string): Promise<boolean> => {
-    const connectionMap: Record<string, string> = {
-      Google: "google-oauth2",
-    };
-    const connection = connectionMap[provider] || provider.toLowerCase();
-    window.location.href = `/auth/login?connection=${connection}`;
-    return true;
-  };
-
-  // Signup - redirects to Auth0 signup
   const signup = async (
     name: string,
     email: string,
     password: string,
-  ): Promise<boolean> => {
-    window.location.href = "/auth/login?screen_hint=signup";
-    return true;
+  ): Promise<AuthResult> => {
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        return { ok: false, message: data.message || data.error || "Signup failed" };
+      }
+
+      if (data.user) {
+        const u: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: "user",
+        };
+        saveUser(u);
+      }
+
+      return { ok: true };
+    } catch (err) {
+      console.error("Error during signup:", err);
+      return { ok: false, message: "Something went wrong. Please try again." };
+    }
   };
 
-  // Logout - redirects to Auth0 logout
-  const logout = () => {
-    window.location.href = "/auth/logout";
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      }).catch(() => {});
+    } finally {
+      saveUser(null);
+      if (typeof window !== "undefined") {
+        window.location.hash = "#home";
+      }
+    }
   };
 
   const updateFitnessMetrics = (metrics: FitnessMetrics) => {
-    const updatedMetrics = {
-      ...fitnessMetrics,
+    if (!user) return;
+
+    const updatedMetrics: FitnessMetrics = {
+      ...user.fitnessMetrics,
       ...metrics,
       lastCalculated: new Date(),
     };
-    setFitnessMetrics(updatedMetrics);
 
-    if (localUser) {
-      setLocalUser({
-        ...localUser,
-        fitnessMetrics: updatedMetrics,
-      });
-    }
+    const updatedUser: User = { ...user, fitnessMetrics: updatedMetrics };
+    saveUser(updatedUser);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: localUser,
-        isLoading: auth0Loading,
+        user,
+        isLoading,
         login,
-        loginWithSocial,
-        loginWithAuth0,
         signup,
         logout,
         updateFitnessMetrics,
@@ -181,9 +188,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context;
+  return ctx;
 }
