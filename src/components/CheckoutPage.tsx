@@ -57,7 +57,7 @@ const SHIPPING_BY_PLAN: Record<Plan["id"], number> = {
   "six-month": 5,
   yearly: 0,
 };
-const SERVICE_RATE = 0.01;
+const SERVICE_RATE = 0.1;
 const TAX_RATE = 0.13;
 
 export function CheckoutPage() {
