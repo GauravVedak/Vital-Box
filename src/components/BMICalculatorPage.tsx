@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Input } from "./ui/input";
@@ -36,15 +38,17 @@ interface BMIResult {
 
 export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
   const { user, updateFitnessMetrics } = useAuth();
-  const { getRecommendations, updateUserGoals } = useAIRecommendations();
+  const { updateUserGoals } = useAIRecommendations();
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [unit, setUnit] = useState<"metric" | "imperial">("metric");
   const [result, setResult] = useState<BMIResult | null>(null);
 
   const calculateBMI = () => {
+    if (!height || !weight) return;
+
     let bmi: number;
-    
+
     if (unit === "metric") {
       const heightInMeters = parseFloat(height) / 100;
       bmi = parseFloat(weight) / (heightInMeters * heightInMeters);
@@ -65,80 +69,84 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
       category = "Underweight";
       healthNote = "Consider gaining healthy weight";
       color = "text-blue-600";
-      aiRecommendation = "Your BMI indicates you're underweight. Focus on nutrient-dense foods and strength training to build healthy muscle mass. Our AI recommends protein-rich supplements and mass gainers to support your journey.";
+      aiRecommendation =
+        "Your BMI indicates you're underweight. Focus on nutrient-dense foods and strength training to build healthy muscle mass.";
       healthRisks = [
         "Weakened immune system",
         "Nutritional deficiencies",
-        "Decreased bone density"
+        "Decreased bone density",
       ];
       actionItems = [
         "Increase caloric intake with nutrient-rich foods",
         "Consider strength training exercises",
-        "Consult a nutritionist for a personalized meal plan"
+        "Consult a nutritionist for a personalized meal plan",
       ];
       lifestyleTips = [
         "Eat 5-6 smaller meals throughout the day",
         "Include protein in every meal",
-        "Add healthy fats like nuts and avocados"
+        "Add healthy fats like nuts and avocados",
       ];
     } else if (bmi >= 18.5 && bmi < 25) {
       category = "Normal Weight";
       healthNote = "You're in the healthy range!";
       color = "text-emerald-600";
-      aiRecommendation = "Excellent! Your BMI is in the healthy range. Maintain this with balanced nutrition and regular exercise. Our AI suggests multivitamins and protein supplements to support your active lifestyle and overall wellness.";
+      aiRecommendation =
+        "Excellent! Your BMI is in the healthy range. Maintain this with balanced nutrition and regular exercise.";
       healthRisks = [
         "Minimal health risks at this BMI",
-        "Continue monitoring your health metrics"
+        "Continue monitoring your health metrics",
       ];
       actionItems = [
         "Maintain current healthy habits",
         "Stay active with 150+ minutes of exercise weekly",
-        "Keep a balanced diet rich in whole foods"
+        "Keep a balanced diet rich in whole foods",
       ];
       lifestyleTips = [
         "Mix cardio and strength training",
         "Stay hydrated with 8+ glasses of water daily",
-        "Get 7-9 hours of quality sleep"
+        "Get 7-9 hours of quality sleep",
       ];
     } else if (bmi >= 25 && bmi < 30) {
       category = "Overweight";
       healthNote = "Focus on balanced nutrition";
       color = "text-orange-600";
-      aiRecommendation = "Your BMI suggests you're in the overweight category. Small lifestyle changes can make a big difference. Our AI recommends supplements that support metabolism, lean muscle development, and fat loss when combined with proper diet and exercise.";
+      aiRecommendation =
+        "Your BMI suggests you're in the overweight category. Small lifestyle changes can make a big difference.";
       healthRisks = [
         "Increased risk of cardiovascular disease",
         "Higher likelihood of type 2 diabetes",
-        "Joint stress and mobility issues"
+        "Joint stress and mobility issues",
       ];
       actionItems = [
         "Create a sustainable calorie deficit",
         "Increase physical activity gradually",
-        "Focus on whole foods and reduce processed foods"
+        "Focus on whole foods and reduce processed foods",
       ];
       lifestyleTips = [
         "Aim for 30-60 minutes of daily activity",
         "Practice portion control",
-        "Track your food intake and progress"
+        "Track your food intake and progress",
       ];
     } else {
       category = "Obese";
       healthNote = "Consult a health professional";
       color = "text-red-600";
-      aiRecommendation = "Your BMI indicates obesity. We strongly recommend consulting with a healthcare provider to create a comprehensive health plan. Our supplements can support your wellness journey alongside medical guidance and lifestyle changes.";
+      aiRecommendation =
+        "Your BMI indicates obesity. We strongly recommend consulting with a healthcare provider to create a comprehensive health plan.";
       healthRisks = [
         "Significantly increased cardiovascular risk",
         "Higher risk of type 2 diabetes and metabolic syndrome",
-        "Increased likelihood of sleep apnea"
+        "Increased likelihood of sleep apnea",
       ];
       actionItems = [
         "Schedule a consultation with your doctor",
         "Work with a registered dietitian",
-        "Start with low-impact exercises like walking"
+        "Start with low-impact exercises like walking",
       ];
       lifestyleTips = [
         "Set small, achievable goals",
         "Build a support system",
-        "Focus on gradual, sustainable changes"
+        "Focus on gradual, sustainable changes",
       ];
     }
 
@@ -156,15 +164,23 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
     setResult(bmiResult);
 
     if (user) {
+      const now = new Date().toISOString();
+
       updateFitnessMetrics({
-        bmi: bmiResult.value,
-        category: bmiResult.category,
+        latestBMI: {
+          value: bmiResult.value,
+          category: bmiResult.category,
+          height: parseFloat(height),
+          weight: parseFloat(weight),
+          unit,
+          date: now,
+        },
         height: parseFloat(height),
         weight: parseFloat(weight),
         unit,
       });
-      
-      // Update AI goals based on BMI
+
+      // Keep goals in sync for AI engine (even if we don't show supplements here)
       const goals: string[] = [];
       if (bmi < 18.5) {
         goals.push("weight-gain", "muscle-gain");
@@ -182,17 +198,17 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
       {/* Minimal Live Background Effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Subtle Grid Pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `
               linear-gradient(to right, #10b981 1px, transparent 1px),
               linear-gradient(to bottom, #10b981 1px, transparent 1px)
             `,
-            backgroundSize: '60px 60px'
+            backgroundSize: "60px 60px",
           }}
         />
-        
+
         {/* Animated Gradient Orbs */}
         <motion.div
           className="absolute top-1/4 -left-20 w-96 h-96 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full blur-3xl"
@@ -204,7 +220,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
         <motion.div
@@ -217,10 +233,10 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           transition={{
             duration: 10,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
-        
+
         {/* Floating Particles */}
         {[...Array(8)].map((_, i) => (
           <motion.div
@@ -243,7 +259,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             }}
           />
         ))}
-        
+
         {/* Pulse Rings */}
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-emerald-300/10"
@@ -254,7 +270,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           transition={{
             duration: 6,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
         <motion.div
@@ -286,12 +302,18 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6"
           >
             <Activity className="w-5 h-5 text-emerald-600" />
-            <span className="font-medium text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.1em' }}>
+            <span
+              className="font-medium text-emerald-700 uppercase tracking-wider"
+              style={{ fontSize: "0.75rem", letterSpacing: "0.1em" }}
+            >
               HEALTH CALCULATOR
             </span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-6xl mb-4 tracking-tight" style={{ fontWeight: 700 }}>
+          <h1
+            className="text-5xl md:text-6xl mb-4 tracking-tight"
+            style={{ fontWeight: 700 }}
+          >
             <span className="text-gray-900">BMI </span>
             <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
               Calculator
@@ -311,20 +333,28 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             <Button
               variant={unit === "metric" ? "default" : "outline"}
               onClick={() => setUnit("metric")}
-              className={unit === "metric" ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8" : "rounded-full px-8"}
+              className={
+                unit === "metric"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
+                  : "rounded-full px-8"
+              }
             >
               Metric (cm/kg)
             </Button>
             <Button
               variant={unit === "imperial" ? "default" : "outline"}
               onClick={() => setUnit("imperial")}
-              className={unit === "imperial" ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8" : "rounded-full px-8"}
+              className={
+                unit === "imperial"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
+                  : "rounded-full px-8"
+              }
             >
               Imperial (in/lbs)
             </Button>
           </div>
 
-          {/* Input Fields - Vertical */}
+          {/* Input Fields */}
           <div className="space-y-6 mb-8">
             <div>
               <Label className="flex items-center gap-2 mb-3 text-gray-700 text-base">
@@ -353,19 +383,15 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                 className="h-14 text-lg bg-white/90 backdrop-blur-xl border-2 border-gray-300 focus:border-emerald-500 rounded-xl"
               />
             </div>
-
           </div>
 
           {/* Calculate Button */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={calculateBMI}
               disabled={!height || !weight}
               className="w-full h-16 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-xl text-lg font-semibold uppercase tracking-wider relative overflow-hidden group"
-              style={{ letterSpacing: '0.1em' }}
+              style={{ letterSpacing: "0.1em" }}
             >
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-500"
@@ -399,18 +425,33 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                 >
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex-1">
-                      <p className="text-gray-500 uppercase tracking-widest mb-2" style={{ fontSize: '0.7rem' }}>
+                      <p
+                        className="text-gray-500 uppercase tracking-widest mb-2"
+                        style={{ fontSize: "0.7rem" }}
+                      >
                         Your BMI Score
                       </p>
                       <div className="flex items-baseline gap-3">
-                        <span className={`${result.color}`} style={{ fontSize: '4rem', fontWeight: 700, lineHeight: 1 }}>
+                        <span
+                          className={result.color}
+                          style={{
+                            fontSize: "4rem",
+                            fontWeight: 700,
+                            lineHeight: 1,
+                          }}
+                        >
                           {result.value}
                         </span>
                         <div>
-                          <p className={`${result.color} mb-1`} style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                          <p
+                            className={`${result.color} mb-1`}
+                            style={{ fontSize: "1.25rem", fontWeight: 600 }}
+                          >
                             {result.category}
                           </p>
-                          <p className="text-gray-600 text-sm">{result.healthNote}</p>
+                          <p className="text-gray-600 text-sm">
+                            {result.healthNote}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -461,13 +502,19 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <AlertCircle className="w-5 h-5 text-orange-500" />
-                        <h4 className="text-gray-900 uppercase tracking-wider" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                        <h4
+                          className="text-gray-900 uppercase tracking-wider"
+                          style={{ fontSize: "0.75rem", fontWeight: 600 }}
+                        >
                           Health Considerations
                         </h4>
                       </div>
                       <ul className="space-y-2">
                         {result.healthRisks.map((risk, i) => (
-                          <li key={i} className="text-gray-600 text-xs flex items-start gap-2">
+                          <li
+                            key={i}
+                            className="text-gray-600 text-xs flex items-start gap-2"
+                          >
                             <span className="w-1 h-1 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
                             <span>{risk}</span>
                           </li>
@@ -486,13 +533,19 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <CheckCircle className="w-5 h-5 text-emerald-500" />
-                        <h4 className="text-gray-900 uppercase tracking-wider" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                        <h4
+                          className="text-gray-900 uppercase tracking-wider"
+                          style={{ fontSize: "0.75rem", fontWeight: 600 }}
+                        >
                           Recommended Actions
                         </h4>
                       </div>
                       <ul className="space-y-2">
                         {result.actionItems.map((action, i) => (
-                          <li key={i} className="text-gray-600 text-xs flex items-start gap-2">
+                          <li
+                            key={i}
+                            className="text-gray-600 text-xs flex items-start gap-2"
+                          >
                             <span className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
                             <span>{action}</span>
                           </li>
@@ -511,13 +564,19 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                     >
                       <div className="flex items-center gap-2 mb-3">
                         <Heart className="w-5 h-5 text-rose-500" />
-                        <h4 className="text-gray-900 uppercase tracking-wider" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                        <h4
+                          className="text-gray-900 uppercase tracking-wider"
+                          style={{ fontSize: "0.75rem", fontWeight: 600 }}
+                        >
                           Lifestyle Tips
                         </h4>
                       </div>
                       <ul className="space-y-2">
                         {result.lifestyleTips.map((tip, i) => (
-                          <li key={i} className="text-gray-600 text-xs flex items-start gap-2">
+                          <li
+                            key={i}
+                            className="text-gray-600 text-xs flex items-start gap-2"
+                          >
                             <span className="w-1 h-1 rounded-full bg-rose-400 mt-1.5 flex-shrink-0" />
                             <span>{tip}</span>
                           </li>
@@ -526,89 +585,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                     </motion.div>
                   )}
                 </div>
-
-                {/* AI Supplement Recommendations */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="bg-gradient-to-br from-white/60 to-white/40 backdrop-blur-xl rounded-3xl border border-gray-200/60 p-8 shadow-lg"
-                >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-white" />
-                      </div>
-                      <h3 className="text-gray-900 uppercase tracking-wider" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                        AI-Powered Recommendations
-                      </h3>
-                    </div>
-                    <motion.button
-                      onClick={() => window.location.hash = '#choose-box'}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700 text-sm"
-                      style={{ fontWeight: 600 }}
-                    >
-                      View All
-                      <ShoppingCart className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {getRecommendations().slice(0, 3).map((recommendation, i) => (
-                      <motion.div
-                        key={recommendation.product.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.9 + i * 0.1 }}
-                        whileHover={{ x: 4 }}
-                        className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 hover:border-emerald-300/60 hover:shadow-md transition-all duration-300 overflow-hidden"
-                      >
-                        <div className="flex items-center gap-4 p-4">
-                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
-                            <ImageWithFallback
-                              src={recommendation.product.image}
-                              alt={recommendation.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-gray-900 font-medium mb-0.5">{recommendation.product.name}</p>
-                            <p className="text-emerald-600 mb-2" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                              ${recommendation.product.price}
-                            </p>
-                            <p className="text-xs text-gray-600 line-clamp-1">
-                              {recommendation.rationale}
-                            </p>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => window.location.hash = '#choose-box'}
-                            className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl shadow-md hover:shadow-lg transition-shadow flex-shrink-0 flex items-center gap-1.5"
-                            style={{ fontWeight: 500, fontSize: '0.875rem' }}
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add
-                          </motion.button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
-                    onClick={() => window.location.hash = '#choose-box'}
-                    className="w-full mt-4 py-3 rounded-xl border-2 border-emerald-300/50 hover:border-emerald-400 text-emerald-700 hover:bg-emerald-50/50 transition-all flex items-center justify-center gap-2"
-                    style={{ fontWeight: 600 }}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Build Your Custom Box
-                  </motion.button>
-                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
