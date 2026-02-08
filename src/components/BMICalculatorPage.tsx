@@ -12,14 +12,10 @@ import {
   Scale,
   Ruler,
   Sparkles,
-  Plus,
   Heart,
-  TrendingUp,
   AlertCircle,
   CheckCircle,
-  ShoppingCart,
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface BMICalculatorPageProps {
   onSignInClick?: () => void;
@@ -36,12 +32,14 @@ interface BMIResult {
   lifestyleTips?: string[];
 }
 
+type Unit = "metric" | "imperial";
+
 export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
   const { user, updateFitnessMetrics } = useAuth();
   const { updateUserGoals } = useAIRecommendations();
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
-  const [unit, setUnit] = useState<"metric" | "imperial">("metric");
+  const [unit, setUnit] = useState<Unit>("metric");
   const [result, setResult] = useState<BMIResult | null>(null);
 
   const calculateBMI = () => {
@@ -150,8 +148,10 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
       ];
     }
 
+    const rounded = Math.round(bmi * 10) / 10;
+
     const bmiResult: BMIResult = {
-      value: Math.round(bmi * 10) / 10,
+      value: rounded,
       category,
       healthNote,
       color,
@@ -165,22 +165,28 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
 
     if (user) {
       const now = new Date().toISOString();
+      const parsedHeight = parseFloat(height);
+      const parsedWeight = parseFloat(weight);
 
-      updateFitnessMetrics({
-        latestBMI: {
-          value: bmiResult.value,
-          category: bmiResult.category,
-          height: parseFloat(height),
-          weight: parseFloat(weight),
-          unit,
-          date: now,
-        },
-        height: parseFloat(height),
-        weight: parseFloat(weight),
+      const entry = {
+        value: bmiResult.value,
+        category: bmiResult.category,
+        height: parsedHeight,
+        weight: parsedWeight,
         unit,
+        date: now,
+      };
+
+      // Persist latest metrics + append history (no goalWeight here)
+      updateFitnessMetrics({
+        latestBMI: entry,
+        height: parsedHeight,
+        weight: parsedWeight,
+        unit,
+        bmiHistoryEntry: entry,
       });
 
-      // Keep goals in sync for AI engine (even if we don't show supplements here)
+      // AI goals for recommendation engine
       const goals: string[] = [];
       if (bmi < 18.5) {
         goals.push("weight-gain", "muscle-gain");
@@ -190,14 +196,15 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
         goals.push("general-fitness", "wellness");
       }
       updateUserGoals(goals);
+    } else if (onSignInClick) {
+      onSignInClick();
     }
   };
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 relative overflow-hidden flex items-center justify-center">
-      {/* Minimal Live Background Effect */}
+      {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Subtle Grid Pattern */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -208,8 +215,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             backgroundSize: "60px 60px",
           }}
         />
-
-        {/* Animated Gradient Orbs */}
         <motion.div
           className="absolute top-1/4 -left-20 w-96 h-96 bg-gradient-to-br from-emerald-200/20 to-teal-200/20 rounded-full blur-3xl"
           animate={{
@@ -236,8 +241,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             ease: "easeInOut",
           }}
         />
-
-        {/* Floating Particles */}
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
@@ -259,8 +262,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             }}
           />
         ))}
-
-        {/* Pulse Rings */}
         <motion.div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-emerald-300/10"
           animate={{
@@ -321,7 +322,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           </h1>
         </motion.div>
 
-        {/* Glassmorphic Calculator Card */}
+        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -354,7 +355,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
             </Button>
           </div>
 
-          {/* Input Fields */}
+          {/* Inputs */}
           <div className="space-y-6 mb-8">
             <div>
               <Label className="flex items-center gap-2 mb-3 text-gray-700 text-base">

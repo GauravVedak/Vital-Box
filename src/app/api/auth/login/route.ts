@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
-const ACCESS_EXPIRES_SECONDS = 60 * 15; // 15 minutes
+const ACCESS_EXPIRES_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 export async function POST(req: Request) {
   try {
@@ -44,6 +44,7 @@ export async function POST(req: Request) {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      role: user.role || "user",
       fitnessMetrics: user.fitnessMetrics || {},
     };
 
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
 
     return res;
   } catch (err) {
+    console.error("Login error:", err);
     return NextResponse.json(
       { ok: false, message: "Server error" },
       { status: 500 },
