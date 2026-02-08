@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { ok: false, message: "Missing fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (existing) {
       return NextResponse.json(
         { ok: false, message: "User already exists" },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -48,9 +48,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true, user }, { status: 201 });
   } catch (err) {
+    console.log(err);
     return NextResponse.json(
       { ok: false, message: "Server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

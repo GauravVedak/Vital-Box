@@ -18,7 +18,6 @@ import { useAuth } from "./AuthContext";
 import { useAIRecommendations } from "./AIRecommendationEngine";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
-
 const typography = {
   h1: {
     fontSize: "clamp(2.5rem, 5vw, 4rem)",
@@ -59,6 +58,27 @@ export function HomePage() {
   const { user } = useAuth();
   const { getRecommendations } = useAIRecommendations();
 
+  //   {/* Trust Badges */}
+  //   <motion.div
+  //   initial={{ opacity: 0 }}
+  //   animate={{ opacity: 1 }}
+  //   transition={{ delay: 0.8 }}
+  //   className="mt-10 flex items-center gap-6 justify-center lg:justify-start flex-wrap"
+  // >
+  //   <div className="flex items-center gap-2 text-gray-600">
+  //     <Shield className="w-5 h-5 text-emerald-600" />
+  //     <span style={typography.bodySm}>Clinically oriented logic</span>
+  //   </div>
+  //   <div className="flex items-center gap-2 text-gray-600">
+  //     <Activity className="w-5 h-5 text-emerald-600" />
+  //     <span style={typography.bodySm}>Goal-aligned planning</span>
+  //   </div>
+  //   <div className="flex items-center gap-2 text-gray-600">
+  //     <CheckCircle className="w-5 h-5 text-emerald-600" />
+  //     <span style={typography.bodySm}>AI-assisted safety checks</span>
+  //   </div>
+  // </motion.div>
+
   // Hero Section
   const HeroSection = () => (
     <section className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-24">
@@ -71,7 +91,10 @@ export function HomePage() {
             transition={{ duration: 0.8 }}
             className="text-center lg:text-left"
           >
-            <h1 className="mb-6 tracking-tight leading-tight" style={typography.h1}>
+            <h1
+              className="mb-6 tracking-tight leading-tight"
+              style={typography.h1}
+            >
               <motion.span
                 className="block"
                 initial={{ opacity: 0, y: 20 }}
@@ -100,16 +123,10 @@ export function HomePage() {
               transition={{ delay: 0.5 }}
               className="mb-8 flex flex-col gap-3 max-w-xl mx-auto lg:mx-0"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 w-fit mx-auto lg:mx-0">
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-                <span className="text-emerald-700" style={typography.eyebrow}>
-                  Built to make supplementation safer
-                </span>
-              </div>
               <p className="text-gray-700" style={typography.bodySm}>
-                We exist because the supplement aisle is confusing and often unsafe.
-                Vital Box uses AI and medical logic to keep you away from guesswork and
-                risky combinations.
+                We exist because the supplement aisle is confusing and often
+                unsafe. Vital Box uses AI and medical logic to keep you away
+                from guesswork and risky combinations.
               </p>
             </motion.div>
 
@@ -130,9 +147,7 @@ export function HomePage() {
                 className="px-8 py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600 text-white rounded-2xl shadow-xl relative overflow-hidden group"
                 style={{ ...typography.body, fontWeight: 600 }}
               >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                />
+                <motion.div className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   Take the Instant AI Quiz
                   <ArrowRight className="w-5 h-5" />
@@ -182,154 +197,132 @@ export function HomePage() {
                 </motion.button>
               </motion.div>
             )}
-
-            {/* Trust Badges */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-10 flex items-center gap-6 justify-center lg:justify-start flex-wrap"
-            >
-              <div className="flex items-center gap-2 text-gray-600">
-                <Shield className="w-5 h-5 text-emerald-600" />
-                <span style={typography.bodySm}>Clinically oriented logic</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Activity className="w-5 h-5 text-emerald-600" />
-                <span style={typography.bodySm}>Goal-aligned planning</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-                <span style={typography.bodySm}>AI-assisted safety checks</span>
-              </div>
-            </motion.div>
           </motion.div>
 
           {/* Right: AI + Medical Logic Flow Card */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative"
           >
             {/* Soft background glows */}
-            <div className="pointer-events-none absolute -top-10 -right-4 w-40 h-40 bg-emerald-400/30 blur-3xl rounded-full" />
-            <div className="pointer-events-none absolute bottom-0 -left-10 w-56 h-56 bg-cyan-400/25 blur-3xl rounded-full" />
+          <div className="pointer-events-none absolute -top-10 -right-4 w-40 h-40 bg-emerald-400/30 blur-3xl rounded-full" />
+          <div className="pointer-events-none absolute bottom-0 -left-10 w-56 h-56 bg-cyan-400/25 blur-3xl rounded-full" />
 
-            <div className="relative w-full max-w-lg mx-auto">
-              <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-gray-200/60 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-8 md:p-10">
-                <div className="flex items-center justify-between mb-7">
-                  <div>
-                    <p className="text-emerald-600 mb-1" style={typography.eyebrow}>
-                      How decisions are made
-                    </p>
-                    <h3 className="text-gray-900" style={typography.h3}>
-                      AI + Medical Logic Flow
-                    </h3>
+          <div className="relative w-full max-w-lg mx-auto">
+            <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-gray-200/60 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-8 md:p-10">
+              <div className="flex items-center justify-between mb-7">
+                <div>
+                  <p
+                    className="text-emerald-600 mb-1"
+                    style={typography.eyebrow}
+                  >
+                    How decisions are made
+                  </p>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {/* Step 1 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <Users className="w-4 h-4 text-emerald-600" />
                   </div>
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-emerald-600" />
+                  <div className="space-y-1">
+                    <p className="text-gray-900" style={typography.bodySm}>
+                      1. You share health basics
+                    </p>
+                    <p className="text-gray-500" style={typography.bodySm}>
+                      Height, weight, goals, medications, and conditions —
+                      always in your control.
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  {/* Step 1 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-gray-900" style={typography.bodySm}>
-                        1. You share health basics
-                      </p>
-                      <p className="text-gray-500" style={typography.bodySm}>
-                        Height, weight, goals, medications, and conditions — always in
-                        your control.
-                      </p>
-                    </div>
+                {/* Connector */}
+                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-1" />
+
+                {/* Step 2 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-cyan-600" />
                   </div>
-
-                  {/* Connector */}
-                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-1" />
-
-                  {/* Step 2 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Brain className="w-4 h-4 text-cyan-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-gray-900" style={typography.bodySm}>
-                        2. AI simulates supplement choices
-                      </p>
-                      <p className="text-gray-500" style={typography.bodySm}>
-                        Our models compare your profile against medical logic and
-                        interaction rules.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Connector */}
-                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
-
-                  {/* Step 3 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
-                      <Shield className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-gray-900" style={typography.bodySm}>
-                        3. Medical standards are applied
-                      </p>
-                      <p className="text-gray-500" style={typography.bodySm}>
-                        Recommendations are checked against clinical references and
-                        safety constraints.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Connector */}
-                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
-
-                  {/* Step 4 */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
-                      <Package className="w-4 h-4 text-teal-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-gray-900" style={typography.bodySm}>
-                        4. You see a clear plan
-                      </p>
-                      <p className="text-gray-500" style={typography.bodySm}>
-                        You review a human-readable supplement plan and decide what to
-                        order.
-                      </p>
-                    </div>
+                  <div className="space-y-1">
+                    <p className="text-gray-900" style={typography.bodySm}>
+                      2. AI simulates supplement choices
+                    </p>
+                    <p className="text-gray-500" style={typography.bodySm}>
+                      Our models compare your profile against medical logic and
+                      interaction rules.
+                    </p>
                   </div>
                 </div>
 
-                {/* Confidence meter */}
-                <div className="mt-8 p-3 rounded-2xl bg-slate-50 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-slate-900" style={typography.bodySm}>
-                      AI + Medical Confidence Meter
+                {/* Connector */}
+                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                {/* Step 3 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-gray-900" style={typography.bodySm}>
+                      3. Medical standards are applied
                     </p>
-                    <p className="text-slate-500" style={typography.bodySm}>
-                      Shows how closely your plan aligns with our safety and efficacy
-                      rules.
+                    <p className="text-gray-500" style={typography.bodySm}>
+                      Recommendations are checked against clinical references
+                      and safety constraints.
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full w-11/12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
-                    </div>
-                    <span className="text-emerald-600" style={typography.bodySm}>
-                      92% match
-                    </span>
+                </div>
+
+                {/* Connector */}
+                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                {/* Step 4 */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                    <Package className="w-4 h-4 text-teal-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-gray-900" style={typography.bodySm}>
+                      4. You see a clear plan
+                    </p>
+                    <p className="text-gray-500" style={typography.bodySm}>
+                      You review a human-readable supplement plan and decide
+                      what to order.
+                    </p>
                   </div>
                 </div>
               </div>
+
+              {/* Confidence meter */}
+              <div className="mt-8 p-3 rounded-2xl bg-slate-50 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-slate-900" style={typography.bodySm}>
+                    AI + Medical Confidence Meter
+                  </p>
+                  <p className="text-slate-500" style={typography.bodySm}>
+                    Shows how closely your plan aligns with our safety and
+                    efficacy rules.
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="h-full w-11/12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  </div>
+                  <span className="text-emerald-600" style={typography.bodySm}>
+                    92% match
+                  </span>
+                </div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
@@ -353,8 +346,8 @@ export function HomePage() {
           </h2>
           <p className="text-gray-600" style={typography.body}>
             Most people are left to piece together advice from ads, trends, and
-            forums. Vital Box exists to bring clarity, safety, and medical logic to
-            everyday supplementation.
+            forums. Vital Box exists to bring clarity, safety, and medical logic
+            to everyday supplementation.
           </p>
         </motion.div>
 
@@ -376,9 +369,9 @@ export function HomePage() {
               </span>
             </div>
             <p className="text-gray-700" style={typography.body}>
-              The supplement industry is crowded, confusing, and lightly regulated.
-              It’s easy to take too much, combine the wrong products, or follow trends
-              that were never meant for you.
+              The supplement industry is crowded, confusing, and lightly
+              regulated. It’s easy to take too much, combine the wrong products,
+              or follow trends that were never meant for you.
             </p>
           </motion.div>
 
@@ -399,9 +392,9 @@ export function HomePage() {
               </span>
             </div>
             <p className="text-gray-700" style={typography.body}>
-              We combine your health data with AI models that are grounded in medical
-              logic. Every recommendation is shaped by safety rules, not influencer
-              trends.
+              We combine your health data with AI models that are grounded in
+              medical logic. Every recommendation is shaped by safety rules, not
+              influencer trends.
             </p>
           </motion.div>
 
@@ -422,9 +415,15 @@ export function HomePage() {
               </span>
             </div>
             <ul className="space-y-2 text-gray-700">
-              <li style={typography.bodySm}>Clinically informed, not hype-driven.</li>
-              <li style={typography.bodySm}>User-first recommendations, always in your control.</li>
-              <li style={typography.bodySm}>AI-assisted, doctor-informed decision logic.</li>
+              <li style={typography.bodySm}>
+                Clinically informed, not hype-driven.
+              </li>
+              <li style={typography.bodySm}>
+                User-first recommendations, always in your control.
+              </li>
+              <li style={typography.bodySm}>
+                AI-assisted, doctor-informed decision logic.
+              </li>
             </ul>
           </motion.div>
         </div>
@@ -480,9 +479,12 @@ export function HomePage() {
             <h2 className="text-gray-900 mb-4" style={typography.h2}>
               How Vital Box works from quiz to plan.
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
-              No mystery algorithms. Just a step-by-step process you can understand
-              and revisit whenever your goals change.
+            <p
+              className="text-gray-600 max-w-2xl mx-auto"
+              style={typography.body}
+            >
+              No mystery algorithms. Just a step-by-step process you can
+              understand and revisit whenever your goals change.
             </p>
           </motion.div>
 
@@ -575,9 +577,12 @@ export function HomePage() {
             <h2 className="text-gray-900 mb-4" style={typography.h2}>
               The benefits of personalized, verified supplementation.
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
-              When your supplements match your health story, you’re more likely to
-              stay consistent, safe, and on track with your goals.
+            <p
+              className="text-gray-600 max-w-2xl mx-auto"
+              style={typography.body}
+            >
+              When your supplements match your health story, you’re more likely
+              to stay consistent, safe, and on track with your goals.
             </p>
           </motion.div>
 
@@ -655,9 +660,12 @@ export function HomePage() {
             <h2 className="text-gray-900 mb-4" style={typography.h2}>
               Example plans for common health goals.
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
-              Every plan is unique, but here’s how Vital Box might support different
-              health journeys — all AI-verified and logic-checked.
+            <p
+              className="text-gray-600 max-w-2xl mx-auto"
+              style={typography.body}
+            >
+              Every plan is unique, but here’s how Vital Box might support
+              different health journeys — all AI-verified and logic-checked.
             </p>
           </motion.div>
 
@@ -667,7 +675,7 @@ export function HomePage() {
                 .filter((r: any) =>
                   persona.tag
                     ? r.product.goalTags?.includes(persona.tag)
-                    : r.product.category === persona.category
+                    : r.product.category === persona.category,
                 )
                 .slice(0, 3);
 
@@ -717,7 +725,10 @@ export function HomePage() {
                             <div className="flex items-center justify-between gap-2">
                               <p
                                 className="text-emerald-600"
-                                style={{ ...typography.bodySm, fontWeight: 600 }}
+                                style={{
+                                  ...typography.bodySm,
+                                  fontWeight: 600,
+                                }}
                               >
                                 ${rec.product.price}
                               </p>
@@ -734,7 +745,8 @@ export function HomePage() {
                       ))}
                       {products.length === 0 && (
                         <p className="text-gray-500" style={typography.bodySm}>
-                          Your exact picks will appear here after you complete the quiz.
+                          Your exact picks will appear here after you complete
+                          the quiz.
                         </p>
                       )}
                     </div>
@@ -782,9 +794,13 @@ export function HomePage() {
             <h2 className="text-gray-900 mb-4" style={typography.h2}>
               Clinically verified. AI-assisted. Built to be trusted.
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto" style={typography.body}>
+            <p
+              className="text-gray-600 max-w-2xl mx-auto"
+              style={typography.body}
+            >
               Vital Box doesn’t replace medical care, but it does hold itself to
-              medical-grade standards for how recommendations are generated and reviewed.
+              medical-grade standards for how recommendations are generated and
+              reviewed.
             </p>
           </motion.div>
 
@@ -842,13 +858,6 @@ export function HomePage() {
               }}
             />
           </div>
-
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-10 right-10 w-20 h-20 border-4 border-white/20 rounded-full"
-          />
-
           <div className="relative z-10">
             <motion.div
               initial={{ scale: 0 }}
@@ -868,8 +877,8 @@ export function HomePage() {
               style={typography.body}
             >
               Take our AI health quiz and see a personalized, medically informed
-              supplement plan in seconds. No signup required — just honest questions
-              and clear answers.
+              supplement plan in seconds. No signup required — just honest
+              questions and clear answers.
             </p>
 
             <motion.button
@@ -877,7 +886,11 @@ export function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-10 py-5 bg-white text-emerald-600 rounded-2xl shadow-2xl inline-flex items-center gap-3 group"
-              style={{ ...typography.body, fontSize: "1.25rem", fontWeight: 700 }}
+              style={{
+                ...typography.body,
+                fontSize: "1.25rem",
+                fontWeight: 700,
+              }}
             >
               Take the AI Quiz Now
               <motion.div
@@ -888,10 +901,7 @@ export function HomePage() {
               </motion.div>
             </motion.button>
 
-            <p
-              className="text-white/80 mt-6 text-sm"
-              style={typography.bodySm}
-            >
+            <p className="text-white/80 mt-6 text-sm" style={typography.bodySm}>
               Most people finish in under 2 minutes.
             </p>
           </div>
@@ -913,7 +923,9 @@ export function HomePage() {
           </span>
         </div>
         <div className="flex items-center gap-6 text-gray-400">
-          <p style={typography.bodySm}>© 2025 Vital Box. All rights reserved.</p>
+          <p style={typography.bodySm}>
+            © 2025 Vital Box. All rights reserved.
+          </p>
           <div className="hidden md:flex items-center gap-4">
             <button
               className="text-gray-400 hover:text-gray-700 transition-colors"
