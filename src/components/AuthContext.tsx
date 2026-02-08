@@ -11,6 +11,9 @@ import {
 interface BMIHistoryEntry {
   value: number;
   category: string;
+  height: number;
+  weight: number;
+  unit: "metric" | "imperial";
   date: string; // ISO string
 }
 
@@ -29,6 +32,7 @@ interface FitnessMetrics {
   height?: number;
   weight?: number;
   unit?: "metric" | "imperial";
+  goalWeight?: number;
   goals?: string[];
   lastCalculated?: string; // ISO string
 }
@@ -47,18 +51,29 @@ interface AuthResult {
   message?: string;
 }
 
+interface FitnessMetricsUpdate {
+  latestBMI?: LatestBMI;
+  height?: number;
+  weight?: number;
+  unit?: "metric" | "imperial";
+  goalWeight?: number;
+  bmiHistoryEntry?: BMIHistoryEntry;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthResult>;
   signup: (name: string, email: string, password: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  updateFitnessMetrics: (metrics: FitnessMetrics) => Promise<void>;
+  updateFitnessMetrics: (metrics: FitnessMetricsUpdate) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = "currentUser";
+const TOKEN_CHECK_INTERVAL = 60000; // Check every 60 seconds
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -91,6 +106,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {});
+    } finally {
+      saveUser(null);
+      if (typeof window !== "undefined") {
+        window.location.hash = "#home";
+      }
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          await logout();
+        }
+        return;
+      }
+
+      const data = await res.json();
+      if (data.user) {
+        const u: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          role: data.user.role || "user",
+          fitnessMetrics: data.user.fitnessMetrics,
+        };
+        saveUser(u);
+      }
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+    }
+  };
+
+  // Auto-logout when token expires
+  useEffect(() => {
+    if (!user) return;
+
+    const checkTokenValidity = async () => {
+      try {
+        const res = await fetch("/api/auth/verify", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!res.ok || res.status === 401) {
+          // Token expired or invalid - logout
+          console.log("Token expired, logging out...");
+          await logout();
+        }
+      } catch (err) {
+        console.error("Token check failed:", err);
+      }
+    };
+
+    // Check immediately on mount if user exists
+    checkTokenValidity();
+
+    // Then check periodically
+    const interval = setInterval(checkTokenValidity, TOKEN_CHECK_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const login = async (
     email: string,
     password: string,
@@ -99,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -135,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ name, email, password }),
       });
 
@@ -162,68 +253,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const updateFitnessMetrics = async (metrics: FitnessMetricsUpdate) => {
+    if (!user) return;
+
+    // Optimistically update local state first
+    const updatedUser: User = {
+      ...user,
+      fitnessMetrics: {
+        ...user.fitnessMetrics,
+        latestBMI: metrics.latestBMI ?? user.fitnessMetrics?.latestBMI,
+        height: metrics.height ?? user.fitnessMetrics?.height,
+        weight: metrics.weight ?? user.fitnessMetrics?.weight,
+        unit: metrics.unit ?? user.fitnessMetrics?.unit,
+        goalWeight: metrics.goalWeight ?? user.fitnessMetrics?.goalWeight,
+      },
+    };
+    saveUser(updatedUser);
+
     try {
-      await fetch("/api/auth/logout", {
+      const res = await fetch("/api/user/metrics", {
         method: "POST",
-      }).catch(() => {});
-    } finally {
-      saveUser(null);
-      if (typeof window !== "undefined") {
-        window.location.hash = "#home";
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          latestBMI: metrics.latestBMI,
+          height: metrics.height,
+          weight: metrics.weight,
+          unit: metrics.unit,
+          goalWeight: metrics.goalWeight,
+          bmiHistoryEntry: metrics.bmiHistoryEntry,
+        }),
+      });
+
+      // If token expired during this call, logout
+      if (res.status === 401) {
+        console.log("Token expired during metrics update, logging out...");
+        await logout();
+        return;
       }
+
+      if (!res.ok) {
+        console.error("Failed to persist fitness metrics");
+        return;
+      }
+
+      // Sync with server response
+      await refreshUser();
+    } catch (e) {
+      console.error("Failed to persist fitness metrics", e);
     }
   };
-
- const updateFitnessMetrics = async (metrics: FitnessMetrics) => {
-  if (!user) return;
-
-  const now = new Date().toISOString();
-  const latestBMI = metrics.latestBMI ?? user.fitnessMetrics?.latestBMI;
-
-  const previousHistory = user.fitnessMetrics?.bmiHistory ?? [];
-  const historyEntry =
-    latestBMI != null
-      ? {
-          value: latestBMI.value,
-          category: latestBMI.category,
-          date: latestBMI.date ?? now,
-        }
-      : undefined;
-
-  const updatedHistory = historyEntry
-    ? [...previousHistory, historyEntry]
-    : previousHistory;
-
-  const updatedMetrics: FitnessMetrics = {
-    ...user.fitnessMetrics,
-    ...metrics,
-    latestBMI,
-    bmiHistory: updatedHistory,
-    lastCalculated: now,
-  };
-
-  const updatedUser: User = { ...user, fitnessMetrics: updatedMetrics };
-  saveUser(updatedUser);
-
-  try {
-    await fetch("/api/user/metrics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        latestBMI,
-        height: updatedMetrics.height,
-        weight: updatedMetrics.weight,
-        unit: updatedMetrics.unit,
-        bmiHistoryEntry: historyEntry,
-        lastCalculated: updatedMetrics.lastCalculated,
-      }),
-    });
-  } catch (e) {
-    console.error("Failed to persist fitness metrics", e);
-  }
-};
 
   return (
     <AuthContext.Provider
@@ -234,6 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signup,
         logout,
         updateFitnessMetrics,
+        refreshUser,
       }}
     >
       {children}

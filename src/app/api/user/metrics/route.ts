@@ -12,6 +12,17 @@ interface JwtPayload {
   exp?: number;
 }
 
+type Unit = "metric" | "imperial";
+
+type BMIHistoryEntry = {
+  value: number;
+  category: string;
+  height: number;
+  weight: number;
+  unit: Unit;
+  date: string;
+};
+
 export async function POST(req: Request) {
   try {
     // Read JWT from access_token cookie
@@ -46,22 +57,11 @@ export async function POST(req: Request) {
       lastCalculated,
       goalWeight,
     } = body as {
-      latestBMI?: {
-        value: number;
-        category: string;
-        height: number;
-        weight: number;
-        unit: "metric" | "imperial";
-        date: string;
-      };
+      latestBMI?: BMIHistoryEntry;
       height?: number;
       weight?: number;
-      unit?: "metric" | "imperial";
-      bmiHistoryEntry?: {
-        value: number;
-        category: string;
-        date: string;
-      };
+      unit?: Unit;
+      bmiHistoryEntry?: BMIHistoryEntry;
       lastCalculated?: string;
       goalWeight?: number;
     };
@@ -73,6 +73,7 @@ export async function POST(req: Request) {
 
     if (latestBMI) {
       setUpdate["fitnessMetrics.latestBMI"] = latestBMI;
+      setUpdate["fitnessMetrics.lastCalculated"] = latestBMI.date;
     }
     if (typeof height === "number") {
       setUpdate["fitnessMetrics.height"] = height;
@@ -107,15 +108,16 @@ export async function POST(req: Request) {
       );
     }
 
+    // Update only THIS user's data (decoded.sub is their unique user ID)
     const result = await users.findOneAndUpdate(
-      { _id: new ObjectId(decoded.sub) },
+      { _id: new ObjectId(decoded.sub) }, // ← This ensures multi-user isolation
       updateOps,
       { returnDocument: "after" },
     );
 
     return NextResponse.json({
       ok: true,
-      fitnessMetrics: result.value?.fitnessMetrics ?? null,
+      fitnessMetrics: result?.fitnessMetrics ?? null,
     });
   } catch (err) {
     console.error("Error updating fitness metrics:", err);
