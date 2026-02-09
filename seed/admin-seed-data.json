@@ -1,0 +1,198 @@
+{
+  "orders": [
+    {
+      "id": "ORD-1009",
+      "customer": "Mia Diaz",
+      "customerId": null,
+      "subscription": "6-month",
+      "status": "Ongoing",
+      "amount": 179,
+      "startDate": "2026-01-05",
+      "orderDate": "2026-01-05",
+      "promoCode": null,
+      "createdAt": "2026-01-05T00:00:00.000Z",
+      "updatedAt": "2026-01-05T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1014",
+      "customer": "Noah Kim",
+      "customerId": null,
+      "subscription": "yearly",
+      "status": "Ongoing",
+      "amount": 299,
+      "startDate": "2026-01-09",
+      "orderDate": "2026-01-09",
+      "promoCode": null,
+      "createdAt": "2026-01-09T00:00:00.000Z",
+      "updatedAt": "2026-01-09T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1021",
+      "customer": "Ava Patel",
+      "customerId": null,
+      "subscription": "3-month",
+      "status": "Ongoing",
+      "amount": 99,
+      "startDate": "2026-01-12",
+      "orderDate": "2026-01-12",
+      "promoCode": null,
+      "createdAt": "2026-01-12T00:00:00.000Z",
+      "updatedAt": "2026-01-12T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1028",
+      "customer": "Jamal Green",
+      "customerId": null,
+      "subscription": "6-month",
+      "status": "Ongoing",
+      "amount": 179,
+      "startDate": "2026-01-18",
+      "orderDate": "2026-01-18",
+      "promoCode": null,
+      "createdAt": "2026-01-18T00:00:00.000Z",
+      "updatedAt": "2026-01-18T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1035",
+      "customer": "Sofia Torres",
+      "customerId": null,
+      "subscription": "yearly",
+      "status": "Ongoing",
+      "amount": 299,
+      "startDate": "2026-01-20",
+      "orderDate": "2026-01-20",
+      "promoCode": null,
+      "createdAt": "2026-01-20T00:00:00.000Z",
+      "updatedAt": "2026-01-20T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1039",
+      "customer": "Oliver Park",
+      "customerId": null,
+      "subscription": "3-month",
+      "status": "Completed",
+      "amount": 99,
+      "startDate": null,
+      "orderDate": "2026-01-21",
+      "promoCode": null,
+      "createdAt": "2026-01-21T00:00:00.000Z",
+      "updatedAt": "2026-01-21T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1041",
+      "customer": "Liam Chen",
+      "customerId": null,
+      "subscription": "6-month",
+      "status": "Completed",
+      "amount": 179,
+      "startDate": null,
+      "orderDate": "2026-01-22",
+      "promoCode": null,
+      "createdAt": "2026-01-22T00:00:00.000Z",
+      "updatedAt": "2026-01-22T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1043",
+      "customer": "Harper Lee",
+      "customerId": null,
+      "subscription": "yearly",
+      "status": "Completed",
+      "amount": 299,
+      "startDate": null,
+      "orderDate": "2026-01-22",
+      "promoCode": null,
+      "createdAt": "2026-01-22T00:00:00.000Z",
+      "updatedAt": "2026-01-22T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1048",
+      "customer": "Grace Singh",
+      "customerId": null,
+      "subscription": "3-month",
+      "status": "Pending",
+      "amount": 99,
+      "startDate": null,
+      "orderDate": "2026-01-23",
+      "promoCode": null,
+      "createdAt": "2026-01-23T00:00:00.000Z",
+      "updatedAt": "2026-01-23T00:00:00.000Z"
+    },
+    {
+      "id": "ORD-1050",
+      "customer": "Ethan Ross",
+      "customerId": null,
+      "subscription": "6-month",
+      "status": "Completed",
+      "amount": 179,
+      "startDate": null,
+      "orderDate": "2026-01-24",
+      "promoCode": null,
+      "createdAt": "2026-01-24T00:00:00.000Z",
+      "updatedAt": "2026-01-24T00:00:00.000Z"
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo-1",
+      "name": "Spring Reset",
+      "code": "SPRING15",
+      "discountType": "percent",
+      "discountValue": 15,
+      "startDate": "2026-03-01",
+      "endDate": "2026-03-31",
+      "status": "Active",
+      "createdAt": "2026-02-01T00:00:00.000Z",
+      "updatedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "id": "promo-2",
+      "name": "New Member Boost",
+      "code": "NEW25",
+      "discountType": "percent",
+      "discountValue": 25,
+      "startDate": "2026-02-10",
+      "endDate": "2026-04-15",
+      "status": "Active",
+      "createdAt": "2026-02-01T00:00:00.000Z",
+      "updatedAt": "2026-02-01T00:00:00.000Z"
+    },
+    {
+      "id": "promo-3",
+      "name": "Summer Annual",
+      "code": "YEAR20",
+      "discountType": "percent",
+      "discountValue": 20,
+      "startDate": "2026-06-01",
+      "endDate": "2026-07-01",
+      "status": "Scheduled",
+      "createdAt": "2026-02-01T00:00:00.000Z",
+      "updatedAt": "2026-02-01T00:00:00.000Z"
+    }
+  ],
+  "analytics": {
+    "signups": [
+      { "month": "Jan", "year": 2026, "signups": 120 },
+      { "month": "Feb", "year": 2026, "signups": 154 },
+      { "month": "Mar", "year": 2026, "signups": 190 },
+      { "month": "Apr", "year": 2026, "signups": 175 },
+      { "month": "May", "year": 2026, "signups": 210 },
+      { "month": "Jun", "year": 2026, "signups": 245 }
+    ],
+    "memberships": [
+      { "month": "Jan", "year": 2026, "memberships": 88 },
+      { "month": "Feb", "year": 2026, "memberships": 102 },
+      { "month": "Mar", "year": 2026, "memberships": 128 },
+      { "month": "Apr", "year": 2026, "memberships": 120 },
+      { "month": "May", "year": 2026, "memberships": 146 },
+      { "month": "Jun", "year": 2026, "memberships": 165 }
+    ],
+    "subscriptions": [
+      { "month": "Jan", "year": 2026, "threeMonth": 32, "sixMonth": 38, "yearly": 18 },
+      { "month": "Feb", "year": 2026, "threeMonth": 40, "sixMonth": 44, "yearly": 20 },
+      { "month": "Mar", "year": 2026, "threeMonth": 45, "sixMonth": 52, "yearly": 24 },
+      { "month": "Apr", "year": 2026, "threeMonth": 41, "sixMonth": 50, "yearly": 29 },
+      { "month": "May", "year": 2026, "threeMonth": 48, "sixMonth": 60, "yearly": 32 },
+      { "month": "Jun", "year": 2026, "threeMonth": 52, "sixMonth": 68, "yearly": 38 }
+    ]
+  }
+}

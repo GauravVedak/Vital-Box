@@ -3,11 +3,11 @@ import { MinimalNavbar } from "./components/MinimalNavbar";
 import { HomePage } from "./components/HomePage";
 import { AIAdvisorPage } from "./components/AIAdvisorPage";
 import { ChooseBoxPage } from "./components/ChooseBoxPage";
-import { BMICalculatorPage } from "./components/BMICalculatorPage";
+import { BMICalculatorPage } from "./components/bmi-calculator/BMICalculatorPage";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { UserPanel } from "./components/UserPanel";
-import { AdminPanel } from "./components/AdminPanel";
+import { AdminPanel } from "./components/admin-panel";
 import { CheckoutPage } from "./components/CheckoutPage";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { AIRecommendationProvider } from "./components/AIRecommendationEngine";
@@ -93,7 +93,7 @@ function AppContent() {
   if (authMode === "signin") {
     return (
       <>
-        <SignInPage 
+        <SignInPage
           onSwitchToSignUp={handleSwitchToSignUp}
           onSuccess={handleAuthSuccess}
         />
@@ -105,7 +105,7 @@ function AppContent() {
   if (authMode === "signup") {
     return (
       <>
-        <SignUpPage 
+        <SignUpPage
           onSwitchToSignIn={handleSwitchToSignIn}
           onSuccess={handleAuthSuccess}
         />
@@ -125,9 +125,15 @@ function AppContent() {
         ) : (
           <>
             <MinimalNavbar onSignInClick={handleSignInClick} />
-            {currentPage === "bmi" && user && <BMICalculatorPage onSignInClick={handleSignInClick} />}
-            {currentPage === "ai-advisor" && user && <AIAdvisorPage onSignInClick={handleSignInClick} />}
-            {currentPage === "choose-box" && user && <ChooseBoxPage onSignInClick={handleSignInClick} />}
+            {currentPage === "bmi" && user && (
+              <BMICalculatorPage onSignInClick={handleSignInClick} />
+            )}
+            {currentPage === "ai-advisor" && user && (
+              <AIAdvisorPage onSignInClick={handleSignInClick} />
+            )}
+            {currentPage === "choose-box" && user && (
+              <ChooseBoxPage onSignInClick={handleSignInClick} />
+            )}
             {currentPage === "checkout" && user && <CheckoutPage />}
             {currentPage === "home" && <HomePage />}
           </>

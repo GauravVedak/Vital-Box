@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Button } from "./ui/button";
-import { useAuth } from "./AuthContext";
-import { useAIRecommendations } from "./AIRecommendationEngine";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { useAuth } from "../AuthContext";
+import { useAIRecommendations } from "../AIRecommendationEngine";
+import { getBMICategoryData, getAIGoalsForBMI } from "./data";
 import {
   Activity,
   Scale,
@@ -46,7 +47,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
     if (!height || !weight) return;
 
     let bmi: number;
-
     if (unit === "metric") {
       const heightInMeters = parseFloat(height) / 100;
       bmi = parseFloat(weight) / (heightInMeters * heightInMeters);
@@ -55,110 +55,12 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
       bmi = (parseFloat(weight) / (heightInInches * heightInInches)) * 703;
     }
 
-    let category = "";
-    let healthNote = "";
-    let color = "";
-    let aiRecommendation = "";
-    let healthRisks: string[] = [];
-    let actionItems: string[] = [];
-    let lifestyleTips: string[] = [];
-
-    if (bmi < 18.5) {
-      category = "Underweight";
-      healthNote = "Consider gaining healthy weight";
-      color = "text-blue-600";
-      aiRecommendation =
-        "Your BMI indicates you're underweight. Focus on nutrient-dense foods and strength training to build healthy muscle mass.";
-      healthRisks = [
-        "Weakened immune system",
-        "Nutritional deficiencies",
-        "Decreased bone density",
-      ];
-      actionItems = [
-        "Increase caloric intake with nutrient-rich foods",
-        "Consider strength training exercises",
-        "Consult a nutritionist for a personalized meal plan",
-      ];
-      lifestyleTips = [
-        "Eat 5-6 smaller meals throughout the day",
-        "Include protein in every meal",
-        "Add healthy fats like nuts and avocados",
-      ];
-    } else if (bmi >= 18.5 && bmi < 25) {
-      category = "Normal Weight";
-      healthNote = "You're in the healthy range!";
-      color = "text-emerald-600";
-      aiRecommendation =
-        "Excellent! Your BMI is in the healthy range. Maintain this with balanced nutrition and regular exercise.";
-      healthRisks = [
-        "Minimal health risks at this BMI",
-        "Continue monitoring your health metrics",
-      ];
-      actionItems = [
-        "Maintain current healthy habits",
-        "Stay active with 150+ minutes of exercise weekly",
-        "Keep a balanced diet rich in whole foods",
-      ];
-      lifestyleTips = [
-        "Mix cardio and strength training",
-        "Stay hydrated with 8+ glasses of water daily",
-        "Get 7-9 hours of quality sleep",
-      ];
-    } else if (bmi >= 25 && bmi < 30) {
-      category = "Overweight";
-      healthNote = "Focus on balanced nutrition";
-      color = "text-orange-600";
-      aiRecommendation =
-        "Your BMI suggests you're in the overweight category. Small lifestyle changes can make a big difference.";
-      healthRisks = [
-        "Increased risk of cardiovascular disease",
-        "Higher likelihood of type 2 diabetes",
-        "Joint stress and mobility issues",
-      ];
-      actionItems = [
-        "Create a sustainable calorie deficit",
-        "Increase physical activity gradually",
-        "Focus on whole foods and reduce processed foods",
-      ];
-      lifestyleTips = [
-        "Aim for 30-60 minutes of daily activity",
-        "Practice portion control",
-        "Track your food intake and progress",
-      ];
-    } else {
-      category = "Obese";
-      healthNote = "Consult a health professional";
-      color = "text-red-600";
-      aiRecommendation =
-        "Your BMI indicates obesity. We strongly recommend consulting with a healthcare provider to create a comprehensive health plan.";
-      healthRisks = [
-        "Significantly increased cardiovascular risk",
-        "Higher risk of type 2 diabetes and metabolic syndrome",
-        "Increased likelihood of sleep apnea",
-      ];
-      actionItems = [
-        "Schedule a consultation with your doctor",
-        "Work with a registered dietitian",
-        "Start with low-impact exercises like walking",
-      ];
-      lifestyleTips = [
-        "Set small, achievable goals",
-        "Build a support system",
-        "Focus on gradual, sustainable changes",
-      ];
-    }
-
     const rounded = Math.round(bmi * 10) / 10;
+    const categoryData = getBMICategoryData(bmi);
 
     const bmiResult: BMIResult = {
       value: rounded,
-      category,
-      healthNote,
-      color,
-      aiRecommendation,
-      healthRisks,
-      actionItems,
-      lifestyleTips,
+      ...categoryData,
     };
 
     setResult(bmiResult);
@@ -177,7 +79,6 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
         date: now,
       };
 
-      // Persist latest metrics + append history (no goalWeight here)
       updateFitnessMetrics({
         latestBMI: entry,
         height: parsedHeight,
@@ -186,16 +87,7 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
         bmiHistoryEntry: entry,
       });
 
-      // AI goals for recommendation engine
-      const goals: string[] = [];
-      if (bmi < 18.5) {
-        goals.push("weight-gain", "muscle-gain");
-      } else if (bmi >= 25) {
-        goals.push("weight-loss", "wellness");
-      } else {
-        goals.push("general-fitness", "wellness");
-      }
-      updateUserGoals(goals);
+      updateUserGoals(getAIGoalsForBMI(bmi));
     } else if (onSignInClick) {
       onSignInClick();
     }
@@ -297,22 +189,8 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6"
-          >
-            <Activity className="w-5 h-5 text-emerald-600" />
-            <span
-              className="font-medium text-emerald-700 uppercase tracking-wider"
-              style={{ fontSize: "0.75rem", letterSpacing: "0.1em" }}
-            >
-              HEALTH CALCULATOR
-            </span>
-          </motion.div>
-
           <h1
-            className="text-5xl md:text-6xl mb-4 tracking-tight"
+            className="text-5xl md:text-6xl mt-12 mb-4 tracking-tight"
             style={{ fontWeight: 700 }}
           >
             <span className="text-gray-900">BMI </span>
@@ -336,8 +214,8 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
               onClick={() => setUnit("metric")}
               className={
                 unit === "metric"
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
-                  : "rounded-full px-8"
+                  ? "bg-gradient-to-r cursor-pointer from-emerald-500 to-teal-600 text-white rounded-full px-8"
+                  : "rounded-full px-8 cursor-pointer"
               }
             >
               Metric (cm/kg)
@@ -347,8 +225,8 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
               onClick={() => setUnit("imperial")}
               className={
                 unit === "imperial"
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
-                  : "rounded-full px-8"
+                  ? "bg-gradient-to-r cursor-pointer from-emerald-500 to-teal-600 text-white rounded-full px-8"
+                  : "rounded-full px-8 cursor-pointer"
               }
             >
               Imperial (in/lbs)
@@ -387,21 +265,18 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
           </div>
 
           {/* Calculate Button */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex justify-center items-center "
+          >
             <Button
               onClick={calculateBMI}
               disabled={!height || !weight}
-              className="w-full h-16 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-xl text-lg font-semibold uppercase tracking-wider relative overflow-hidden group"
+              className="w-max-10 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-xl text-md font-semibold uppercase tracking-wider relative overflow-hidden group"
               style={{ letterSpacing: "0.1em" }}
             >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-500"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: 0 }}
-                transition={{ duration: 0.4 }}
-              />
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                <Activity className="w-5 h-5" />
+              <span className="relative z-10 flex items-center justify-center gap-2 cursor-pointer">
                 Calculate BMI
               </span>
             </Button>

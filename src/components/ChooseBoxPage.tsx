@@ -52,7 +52,7 @@ const OLD_products: Product[] = [
     image: "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=400",
     bmiCategory: ["Underweight", "Normal Weight"],
   },
-  
+
   // Weight Loss
   {
     id: "3",
@@ -225,13 +225,20 @@ const CART_STORAGE_KEY = "vitalBoxCart";
 
 export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
   const { user } = useAuth();
-  const { getRecommendations, products, addProductFeedback, getAIInsights } = useAIRecommendations();
+  const { getRecommendations, products, addProductFeedback, getAIInsights } =
+    useAIRecommendations();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>(
+    [],
+  );
   const [cartOpen, setCartOpen] = useState(false);
-  const [aiRecommendations, setAIRecommendations] = useState<ReturnType<typeof getRecommendations>>([]);
-  const [aiInsights, setAIInsights] = useState<ReturnType<typeof getAIInsights>>([]);
+  const [aiRecommendations, setAIRecommendations] = useState<
+    ReturnType<typeof getRecommendations>
+  >([]);
+  const [aiInsights, setAIInsights] = useState<
+    ReturnType<typeof getAIInsights>
+  >([]);
 
   // Get AI recommendations
   useEffect(() => {
@@ -258,7 +265,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
             typeof item === "object" &&
             typeof item.quantity === "number" &&
             item.product &&
-            typeof item.product.id === "string"
+            typeof item.product.id === "string",
         ) as { product: Product; quantity: number }[];
         setCart(sanitized);
       }
@@ -275,9 +282,11 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
   }, [cart]);
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || product.category === selectedCategory;
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -288,8 +297,8 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
         cart.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
+            : item,
+        ),
       );
     } else {
       setCart([...cart, { product, quantity: 1 }]);
@@ -308,15 +317,15 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
         .map((item) =>
           item.product.id === productId
             ? { ...item, quantity: Math.max(0, item.quantity + change) }
-            : item
+            : item,
         )
-        .filter((item) => item.quantity > 0)
+        .filter((item) => item.quantity > 0),
     );
   };
 
   const cartTotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
-    0
+    0,
   );
 
   const handleProceedToCheckout = () => {
@@ -328,14 +337,14 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
     <div className="min-h-screen pt-24 pb-12 px-6 relative overflow-hidden">
       {/* Minimal Background Effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage: `
               linear-gradient(to right, #10b981 1px, transparent 1px),
               linear-gradient(to bottom, #10b981 1px, transparent 1px)
             `,
-            backgroundSize: '80px 80px'
+            backgroundSize: "80px 80px",
           }}
         />
         <motion.div
@@ -347,7 +356,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
           transition={{
             duration: 12,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
         />
       </div>
@@ -366,22 +375,28 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/70 backdrop-blur-xl rounded-full border border-emerald-300/50 shadow-lg mb-6"
           >
             <Package className="w-5 h-5 text-emerald-600" />
-            <span className="text-emerald-700 uppercase tracking-wider" style={{ fontSize: '0.75rem', letterSpacing: '0.1em' }}>
+            <span
+              className="text-emerald-700 uppercase tracking-wider"
+              style={{ fontSize: "0.75rem", letterSpacing: "0.1em" }}
+            >
               Custom Selection
             </span>
           </motion.div>
 
-          <h1 className="mb-4 tracking-tight" style={{ fontSize: '3rem', fontWeight: 700 }}>
+          <h1
+            className="mb-4 tracking-tight"
+            style={{ fontSize: "3rem", fontWeight: 700 }}
+          >
             <span className="text-gray-900">Build Your </span>
             <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">
               Perfect Box
             </span>
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto mb-2" style={{ fontSize: '1.125rem' }}>
+          <p
+            className="text-gray-600 max-w-2xl mx-auto mb-2"
+            style={{ fontSize: "1.125rem" }}
+          >
             Choose from our premium selection tailored to your fitness goals
-          </p>
-          <p className="text-gray-500 max-w-2xl mx-auto" style={{ fontSize: '0.875rem' }}>
-            Need personalized guidance? You can get in contact with a physician
           </p>
         </motion.div>
 
@@ -403,23 +418,32 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                   insight.type === "achievement"
                     ? "from-emerald-50/80 to-teal-50/80 border-emerald-200/40"
                     : insight.type === "warning"
-                    ? "from-orange-50/80 to-amber-50/80 border-orange-200/40"
-                    : "from-blue-50/80 to-cyan-50/80 border-blue-200/40"
+                      ? "from-orange-50/80 to-amber-50/80 border-orange-200/40"
+                      : "from-blue-50/80 to-cyan-50/80 border-blue-200/40"
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    insight.type === "achievement"
-                      ? "bg-gradient-to-br from-emerald-500 to-teal-600"
-                      : insight.type === "warning"
-                      ? "bg-gradient-to-br from-orange-500 to-amber-600"
-                      : "bg-gradient-to-br from-blue-500 to-cyan-600"
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      insight.type === "achievement"
+                        ? "bg-gradient-to-br from-emerald-500 to-teal-600"
+                        : insight.type === "warning"
+                          ? "bg-gradient-to-br from-orange-500 to-amber-600"
+                          : "bg-gradient-to-br from-blue-500 to-cyan-600"
+                    }`}
+                  >
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-gray-900 uppercase tracking-wider mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                      {insight.type === "achievement" ? "Great Progress!" : insight.type === "warning" ? "Health Alert" : "AI Recommendation"}
+                    <h3
+                      className="text-gray-900 uppercase tracking-wider mb-2"
+                      style={{ fontSize: "0.75rem", fontWeight: 600 }}
+                    >
+                      {insight.type === "achievement"
+                        ? "Great Progress!"
+                        : insight.type === "warning"
+                          ? "Health Alert"
+                          : "AI Recommendation"}
                     </h3>
                     <p className="text-gray-700 mb-3">{insight.message}</p>
                     {insight.products && insight.products.length > 0 && (
@@ -438,10 +462,16 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <p className="text-gray-900 text-xs mb-1 line-clamp-1" style={{ fontWeight: 600 }}>
+                            <p
+                              className="text-gray-900 text-xs mb-1 line-clamp-1"
+                              style={{ fontWeight: 600 }}
+                            >
                               {product.name}
                             </p>
-                            <p className="text-emerald-600 text-sm" style={{ fontWeight: 600 }}>
+                            <p
+                              className="text-emerald-600 text-sm"
+                              style={{ fontWeight: 600 }}
+                            >
                               ${product.price}
                             </p>
                           </motion.div>
@@ -456,7 +486,8 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
         )}
 
         {/* Top AI Recommendations */}
-        {aiRecommendations.filter(r => r.category === "primary").length > 0 && (
+        {aiRecommendations.filter((r) => r.category === "primary").length >
+          0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -469,41 +500,55 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                   <Award className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-gray-900 uppercase tracking-wider" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  <h3
+                    className="text-gray-900 uppercase tracking-wider"
+                    style={{ fontSize: "0.875rem", fontWeight: 600 }}
+                  >
                     Top Picks for You
                   </h3>
                   <p className="text-gray-600 text-sm">
-                    {user?.fitnessMetrics?.bmi ? `Based on your BMI: ${user.fitnessMetrics.bmi.toFixed(1)}` : "Highly recommended"}
+                    {user?.fitnessMetrics?.bmi
+                      ? `Based on your BMI: ${user.fitnessMetrics.bmi.toFixed(1)}`
+                      : "Highly recommended"}
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {aiRecommendations.filter(r => r.category === "primary").slice(0, 5).map((recommendation) => (
-                <motion.div
-                  key={recommendation.product.id}
-                  whileHover={{ y: -4 }}
-                  className="flex-shrink-0 w-48 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-4 cursor-pointer hover:border-emerald-300 transition-colors"
-                  onClick={() => addToCart(recommendation.product)}
-                >
-                  <div className="w-full h-32 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 mb-3 overflow-hidden">
-                    <ImageWithFallback
-                      src={recommendation.product.image}
-                      alt={recommendation.product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <p className="text-gray-900 text-sm mb-1 line-clamp-1" style={{ fontWeight: 600 }}>
-                    {recommendation.product.name}
-                  </p>
-                  <p className="text-emerald-600 mb-2" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                    ${recommendation.product.price}
-                  </p>
-                  <p className="text-xs text-gray-600 line-clamp-2">
-                    {recommendation.rationale}
-                  </p>
-                </motion.div>
-              ))}
+              {aiRecommendations
+                .filter((r) => r.category === "primary")
+                .slice(0, 5)
+                .map((recommendation) => (
+                  <motion.div
+                    key={recommendation.product.id}
+                    whileHover={{ y: -4 }}
+                    className="flex-shrink-0 w-48 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-4 cursor-pointer hover:border-emerald-300 transition-colors"
+                    onClick={() => addToCart(recommendation.product)}
+                  >
+                    <div className="w-full h-32 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 mb-3 overflow-hidden">
+                      <ImageWithFallback
+                        src={recommendation.product.image}
+                        alt={recommendation.product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p
+                      className="text-gray-900 text-sm mb-1 line-clamp-1"
+                      style={{ fontWeight: 600 }}
+                    >
+                      {recommendation.product.name}
+                    </p>
+                    <p
+                      className="text-emerald-600 mb-2"
+                      style={{ fontSize: "1rem", fontWeight: 600 }}
+                    >
+                      ${recommendation.product.price}
+                    </p>
+                    <p className="text-xs text-gray-600 line-clamp-2">
+                      {recommendation.rationale}
+                    </p>
+                  </motion.div>
+                ))}
             </div>
           </motion.div>
         )}
@@ -585,7 +630,10 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
 
                 {/* Product Info */}
                 <div className="p-5">
-                  <h3 className="text-gray-900 mb-2" style={{ fontWeight: 600 }}>
+                  <h3
+                    className="text-gray-900 mb-2"
+                    style={{ fontWeight: 600 }}
+                  >
                     {product.name}
                   </h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -595,7 +643,10 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                   {/* Benefits */}
                   <div className="mb-4 space-y-1.5">
                     {product.benefits.slice(0, 2).map((benefit, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 text-xs text-gray-600"
+                      >
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         {benefit}
                       </div>
@@ -604,7 +655,10 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
 
                   {/* Price and Add Button */}
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-900" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                    <span
+                      className="text-gray-900"
+                      style={{ fontSize: "1.5rem", fontWeight: 700 }}
+                    >
                       ${product.price}
                     </span>
                     <motion.button
@@ -612,7 +666,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl shadow-md hover:shadow-lg transition-shadow flex items-center gap-1.5"
-                      style={{ fontWeight: 500, fontSize: '0.875rem' }}
+                      style={{ fontWeight: 500, fontSize: "0.875rem" }}
                     >
                       <Plus className="w-4 h-4" />
                       Add
@@ -634,7 +688,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
               <Package className="w-10 h-10 text-gray-400" />
             </div>
-            <p className="text-gray-500" style={{ fontSize: '1.125rem' }}>
+            <p className="text-gray-500" style={{ fontSize: "1.125rem" }}>
               No products found
             </p>
             <p className="text-gray-400 text-sm mt-2">
@@ -660,7 +714,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center shadow-lg"
-                style={{ fontSize: '0.75rem', fontWeight: 700 }}
+                style={{ fontSize: "0.75rem", fontWeight: 700 }}
               >
                 {cart.length}
               </motion.div>
@@ -690,7 +744,10 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-gray-900" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                      <h2
+                        className="text-gray-900"
+                        style={{ fontSize: "1.5rem", fontWeight: 700 }}
+                      >
                         Your Box
                       </h2>
                       <p className="text-gray-600 text-sm mt-0.5">
@@ -734,26 +791,42 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>
+                              <h3
+                                className="text-gray-900 mb-1"
+                                style={{ fontWeight: 600 }}
+                              >
                                 {item.product.name}
                               </h3>
-                              <p className="text-emerald-600 mb-3" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+                              <p
+                                className="text-emerald-600 mb-3"
+                                style={{
+                                  fontSize: "1.125rem",
+                                  fontWeight: 600,
+                                }}
+                              >
                                 ${item.product.price}
                               </p>
                               <div className="flex items-center gap-3">
                                 <motion.button
                                   whileTap={{ scale: 0.9 }}
-                                  onClick={() => updateQuantity(item.product.id, -1)}
+                                  onClick={() =>
+                                    updateQuantity(item.product.id, -1)
+                                  }
                                   className="w-8 h-8 rounded-lg border border-gray-300 hover:border-emerald-500 flex items-center justify-center bg-white transition-colors"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
                                 </motion.button>
-                                <span className="w-8 text-center" style={{ fontWeight: 600 }}>
+                                <span
+                                  className="w-8 text-center"
+                                  style={{ fontWeight: 600 }}
+                                >
                                   {item.quantity}
                                 </span>
                                 <motion.button
                                   whileTap={{ scale: 0.9 }}
-                                  onClick={() => updateQuantity(item.product.id, 1)}
+                                  onClick={() =>
+                                    updateQuantity(item.product.id, 1)
+                                  }
                                   className="w-8 h-8 rounded-lg border border-gray-300 hover:border-emerald-500 flex items-center justify-center bg-white transition-colors"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
@@ -778,28 +851,43 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                     <div className="space-y-3 mb-6">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="text-gray-900" style={{ fontWeight: 600 }}>
+                        <span
+                          className="text-gray-900"
+                          style={{ fontWeight: 600 }}
+                        >
                           ${cartTotal.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">Shipping</span>
-                        <span className="text-emerald-600" style={{ fontWeight: 600 }}>
+                        <span
+                          className="text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           Free
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">Discount</span>
-                        <span className="text-emerald-600" style={{ fontWeight: 600 }}>
+                        <span
+                          className="text-emerald-600"
+                          style={{ fontWeight: 600 }}
+                        >
                           -$0.00
                         </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-200">
-                      <span className="text-gray-900" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+                      <span
+                        className="text-gray-900"
+                        style={{ fontSize: "1.125rem", fontWeight: 600 }}
+                      >
                         Total
                       </span>
-                      <span className="text-gray-900" style={{ fontSize: '1.75rem', fontWeight: 700 }}>
+                      <span
+                        className="text-gray-900"
+                        style={{ fontSize: "1.75rem", fontWeight: 700 }}
+                      >
                         ${cartTotal.toFixed(2)}
                       </span>
                     </div>
@@ -808,7 +896,7 @@ export function ChooseBoxPage({ onSignInClick }: ChooseBoxPageProps) {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
-                      style={{ fontWeight: 600, fontSize: '1rem' }}
+                      style={{ fontWeight: 600, fontSize: "1rem" }}
                     >
                       Proceed to Checkout
                       <ArrowRight className="w-5 h-5" />
