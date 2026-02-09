@@ -15,8 +15,6 @@ import {
   Package,
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
-import { useAIRecommendations } from "./AIRecommendationEngine";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 const typography = {
   h1: {
@@ -56,28 +54,6 @@ const typography = {
 
 export function HomePage() {
   const { user } = useAuth();
-  const { getRecommendations } = useAIRecommendations();
-
-  //   {/* Trust Badges */}
-  //   <motion.div
-  //   initial={{ opacity: 0 }}
-  //   animate={{ opacity: 1 }}
-  //   transition={{ delay: 0.8 }}
-  //   className="mt-10 flex items-center gap-6 justify-center lg:justify-start flex-wrap"
-  // >
-  //   <div className="flex items-center gap-2 text-gray-600">
-  //     <Shield className="w-5 h-5 text-emerald-600" />
-  //     <span style={typography.bodySm}>Clinically oriented logic</span>
-  //   </div>
-  //   <div className="flex items-center gap-2 text-gray-600">
-  //     <Activity className="w-5 h-5 text-emerald-600" />
-  //     <span style={typography.bodySm}>Goal-aligned planning</span>
-  //   </div>
-  //   <div className="flex items-center gap-2 text-gray-600">
-  //     <CheckCircle className="w-5 h-5 text-emerald-600" />
-  //     <span style={typography.bodySm}>AI-assisted safety checks</span>
-  //   </div>
-  // </motion.div>
 
   // Hero Section
   const HeroSection = () => (
@@ -200,129 +176,130 @@ export function HomePage() {
           </motion.div>
 
           {/* Right: AI + Medical Logic Flow Card */}
-          {/* <motion.div
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative"
           >
             {/* Soft background glows */}
-          <div className="pointer-events-none absolute -top-10 -right-4 w-40 h-40 bg-emerald-400/30 blur-3xl rounded-full" />
-          <div className="pointer-events-none absolute bottom-0 -left-10 w-56 h-56 bg-cyan-400/25 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute -top-10 -right-4 w-40 h-40 bg-emerald-400/30 blur-3xl rounded-full" />
+            <div className="pointer-events-none absolute bottom-0 -left-10 w-56 h-56 bg-cyan-400/25 blur-3xl rounded-full" />
 
-          <div className="relative w-full max-w-lg mx-auto">
-            <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-gray-200/60 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-8 md:p-10">
-              <div className="flex items-center justify-between mb-7">
-                <div>
-                  <p
-                    className="text-emerald-600 mb-1"
-                    style={typography.eyebrow}
-                  >
-                    How decisions are made
-                  </p>
-                </div>
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {/* Step 1 */}
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-emerald-600" />
+            <div className="relative w-full max-w-lg mx-auto">
+              <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] border border-gray-200/60 shadow-[0_30px_70px_rgba(15,23,42,0.15)] p-8 md:p-10">
+                <div className="flex items-center justify-between mb-7">
+                  <div>
+                    <p
+                      className="text-emerald-600 mb-1"
+                      style={typography.eyebrow}
+                    >
+                      How decisions are made
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-gray-900" style={typography.bodySm}>
-                      1. You share health basics
-                    </p>
-                    <p className="text-gray-500" style={typography.bodySm}>
-                      Height, weight, goals, medications, and conditions —
-                      always in your control.
-                    </p>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-emerald-600" />
                   </div>
                 </div>
 
-                {/* Connector */}
-                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-1" />
-
-                {/* Step 2 */}
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-cyan-600" />
+                <div className="space-y-2">
+                  {/* Step 1 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        1. You share health basics
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Height, weight, goals, medications, and conditions —
+                        always in your control.
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-gray-900" style={typography.bodySm}>
-                      2. AI simulates supplement choices
-                    </p>
-                    <p className="text-gray-500" style={typography.bodySm}>
-                      Our models compare your profile against medical logic and
-                      interaction rules.
-                    </p>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-1" />
+
+                  {/* Step 2 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-cyan-50 flex items-center justify-center">
+                      <Brain className="w-4 h-4 text-cyan-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        2. AI simulates supplement choices
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Our models compare your profile against medical logic and
+                        interaction rules.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                  {/* Step 3 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        3. Medical standards are applied
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        Recommendations are checked against clinical references
+                        and safety constraints.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connector */}
+                  <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
+
+                  {/* Step 4 */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
+                      <Package className="w-4 h-4 text-teal-600" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-gray-900" style={typography.bodySm}>
+                        4. You see a clear plan
+                      </p>
+                      <p className="text-gray-500" style={typography.bodySm}>
+                        You review a human-readable supplement plan and decide
+                        what to order.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Connector */}
-                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
-
-                {/* Step 3 */}
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-gray-900" style={typography.bodySm}>
-                      3. Medical standards are applied
+                {/* Confidence meter */}
+                <div className="mt-8 p-3 rounded-2xl bg-slate-50 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-slate-900" style={typography.bodySm}>
+                      AI + Medical Confidence Meter
                     </p>
-                    <p className="text-gray-500" style={typography.bodySm}>
-                      Recommendations are checked against clinical references
-                      and safety constraints.
+                    <p className="text-slate-500" style={typography.bodySm}>
+                      Shows how closely your plan aligns with our safety and
+                      efficacy rules.
                     </p>
                   </div>
-                </div>
-
-                {/* Connector */}
-                <div className="pl-4 border-l-2 border-dashed border-emerald-100 h-2" />
-
-                {/* Step 4 */}
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-teal-50 flex items-center justify-center">
-                    <Package className="w-4 h-4 text-teal-600" />
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
+                      <div className="h-full w-11/12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
+                    </div>
+                    <span className="text-emerald-600" style={typography.bodySm}>
+                      92% match
+                    </span>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-gray-900" style={typography.bodySm}>
-                      4. You see a clear plan
-                    </p>
-                    <p className="text-gray-500" style={typography.bodySm}>
-                      You review a human-readable supplement plan and decide
-                      what to order.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Confidence meter */}
-              <div className="mt-8 p-3 rounded-2xl bg-slate-50 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-slate-900" style={typography.bodySm}>
-                    AI + Medical Confidence Meter
-                  </p>
-                  <p className="text-slate-500" style={typography.bodySm}>
-                    Shows how closely your plan aligns with our safety and
-                    efficacy rules.
-                  </p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="w-24 h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div className="h-full w-11/12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
-                  </div>
-                  <span className="text-emerald-600" style={typography.bodySm}>
-                    92% match
-                  </span>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -342,7 +319,7 @@ export function HomePage() {
             Why Vital Box exists
           </p>
           <h2 className="text-gray-900 mb-4" style={typography.h2}>
-            The supplement world shouldn’t feel like a gamble.
+            The supplement world shouldn't feel like a gamble.
           </h2>
           <p className="text-gray-600" style={typography.body}>
             Most people are left to piece together advice from ads, trends, and
@@ -370,7 +347,7 @@ export function HomePage() {
             </div>
             <p className="text-gray-700" style={typography.body}>
               The supplement industry is crowded, confusing, and lightly
-              regulated. It’s easy to take too much, combine the wrong products,
+              regulated. It's easy to take too much, combine the wrong products,
               or follow trends that were never meant for you.
             </p>
           </motion.div>
@@ -581,7 +558,7 @@ export function HomePage() {
               className="text-gray-600 max-w-2xl mx-auto"
               style={typography.body}
             >
-              When your supplements match your health story, you’re more likely
+              When your supplements match your health story, you're more likely
               to stay consistent, safe, and on track with your goals.
             </p>
           </motion.div>
@@ -621,29 +598,27 @@ export function HomePage() {
         goal: "Muscle Gain",
         icon: TrendingUp,
         color: "from-blue-500 to-purple-600",
-        tag: "muscle-gain",
+        description: "Build strength and muscle mass safely",
       },
       {
         goal: "Weight Loss",
         icon: Activity,
         color: "from-orange-500 to-red-600",
-        tag: "weight-loss",
+        description: "Support healthy fat loss and metabolism",
       },
       {
         goal: "Wellness / General Health",
         icon: Heart,
         color: "from-emerald-500 to-teal-600",
-        category: "wellness",
+        description: "Maintain overall health and immunity",
       },
       {
         goal: "Performance & Energy",
         icon: Zap,
         color: "from-yellow-500 to-orange-600",
-        category: "performance",
+        description: "Boost workout performance and energy",
       },
     ];
-
-    const recommendations = getRecommendations();
 
     return (
       <section className="relative py-32 px-6">
@@ -664,106 +639,59 @@ export function HomePage() {
               className="text-gray-600 max-w-2xl mx-auto"
               style={typography.body}
             >
-              Every plan is unique, but here’s how Vital Box might support
+              Every plan is unique, but here's how Vital Box might support
               different health journeys — all AI-verified and logic-checked.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
-            {personas.map((persona, idx) => {
-              const products = recommendations
-                .filter((r: any) =>
-                  persona.tag
-                    ? r.product.goalTags?.includes(persona.tag)
-                    : r.product.category === persona.category,
-                )
-                .slice(0, 3);
-
-              return (
-                <motion.div
-                  key={persona.goal}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -6 }}
-                  className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden"
-                >
-                  <div className={`h-2 bg-gradient-to-r ${persona.color}`} />
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.color} flex items-center justify-center`}
-                      >
-                        <persona.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <h3 className="text-gray-900" style={typography.h3}>
-                        {persona.goal}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-3 mb-4">
-                      {products.map((rec: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-3 p-2 bg-gray-50/80 rounded-xl"
-                        >
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 overflow-hidden flex-shrink-0">
-                            <ImageWithFallback
-                              src={rec.product.image}
-                              alt={rec.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p
-                              className="text-gray-900 truncate"
-                              style={{ ...typography.bodySm, fontWeight: 600 }}
-                            >
-                              {rec.product.name}
-                            </p>
-                            <div className="flex items-center justify-between gap-2">
-                              <p
-                                className="text-emerald-600"
-                                style={{
-                                  ...typography.bodySm,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                ${rec.product.price}
-                              </p>
-                              <span
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700"
-                                style={typography.bodySm}
-                              >
-                                <CheckCircle className="w-3 h-3" />
-                                AI-verified
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {products.length === 0 && (
-                        <p className="text-gray-500" style={typography.bodySm}>
-                          Your exact picks will appear here after you complete
-                          the quiz.
-                        </p>
-                      )}
-                    </div>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => (window.location.hash = "#bmi")}
-                      className="w-full py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:border-emerald-300 transition-all"
-                      style={{ ...typography.bodySm, fontWeight: 600 }}
+            {personas.map((persona, idx) => (
+              <motion.div
+                key={persona.goal}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                whileHover={{ y: -6 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-xl overflow-hidden"
+              >
+                <div className={`h-2 bg-gradient-to-r ${persona.color}`} />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${persona.color} flex items-center justify-center`}
                     >
-                      See my personalized plan
-                    </motion.button>
+                      <persona.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-gray-900" style={typography.h3}>
+                      {persona.goal}
+                    </h3>
                   </div>
-                </motion.div>
-              );
-            })}
+
+                  <p className="text-gray-600 mb-6" style={typography.bodySm}>
+                    {persona.description}
+                  </p>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                      <p className="text-gray-700 text-center" style={typography.bodySm}>
+                        Your personalized supplements will appear here after you complete the AI quiz.
+                      </p>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => (window.location.hash = "#bmi")}
+                    className="w-full py-2.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 rounded-xl text-gray-700 hover:border-emerald-300 transition-all"
+                    style={{ ...typography.bodySm, fontWeight: 600 }}
+                  >
+                    Take the AI Quiz
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -798,7 +726,7 @@ export function HomePage() {
               className="text-gray-600 max-w-2xl mx-auto"
               style={typography.body}
             >
-              Vital Box doesn’t replace medical care, but it does hold itself to
+              Vital Box doesn't replace medical care, but it does hold itself to
               medical-grade standards for how recommendations are generated and
               reviewed.
             </p>
@@ -924,7 +852,7 @@ export function HomePage() {
         </div>
         <div className="flex items-center gap-6 text-gray-400">
           <p style={typography.bodySm}>
-            © 2025 Vital Box. All rights reserved.
+            © 2026 Vital Box. All rights reserved.
           </p>
           <div className="hidden md:flex items-center gap-4">
             <button

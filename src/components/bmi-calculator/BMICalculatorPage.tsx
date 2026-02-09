@@ -6,8 +6,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { useAuth } from "../AuthContext";
-import { useAIRecommendations } from "../AIRecommendationEngine";
-import { getBMICategoryData, getAIGoalsForBMI } from "./data";
+import { getBMICategoryData } from "./data";
 import {
   Activity,
   Scale,
@@ -37,7 +36,6 @@ type Unit = "metric" | "imperial";
 
 export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
   const { user, updateFitnessMetrics } = useAuth();
-  const { updateUserGoals } = useAIRecommendations();
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [unit, setUnit] = useState<Unit>("metric");
@@ -87,7 +85,8 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
         bmiHistoryEntry: entry,
       });
 
-      updateUserGoals(getAIGoalsForBMI(bmi));
+      // BMI data is now stored in user profile
+      // AI guidance endpoint will read it directly when needed
     } else if (onSignInClick) {
       onSignInClick();
     }
@@ -461,6 +460,25 @@ export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
                     </motion.div>
                   )}
                 </div>
+
+                {/* CTA to AI Advisor */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="mt-6"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => (window.location.hash = "#ai-advisor")}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-xl flex items-center justify-center gap-2"
+                    style={{ fontWeight: 600, fontSize: "0.95rem" }}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Get AI Supplement Recommendations
+                  </motion.button>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>

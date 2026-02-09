@@ -2,15 +2,12 @@ import { useState, useEffect } from "react";
 import { MinimalNavbar } from "./components/MinimalNavbar";
 import { HomePage } from "./components/HomePage";
 import { AIAdvisorPage } from "./components/AIAdvisorPage";
-import { ChooseBoxPage } from "./components/ChooseBoxPage";
 import { BMICalculatorPage } from "./components/bmi-calculator/BMICalculatorPage";
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { UserPanel } from "./components/UserPanel";
 import { AdminPanel } from "./components/admin-panel";
-import { CheckoutPage } from "./components/CheckoutPage";
 import { AuthProvider, useAuth } from "./components/AuthContext";
-import { AIRecommendationProvider } from "./components/AIRecommendationEngine";
 import { Toaster } from "./components/ui/sonner";
 
 // Main app content with authentication checks
@@ -40,10 +37,8 @@ function AppContent() {
   const protectedPages = [
     "bmi",
     "ai-advisor",
-    "choose-box",
     "user-panel",
     "admin-panel",
-    "checkout",
   ];
   const isProtectedPage = protectedPages.includes(currentPage);
 
@@ -131,10 +126,6 @@ function AppContent() {
             {currentPage === "ai-advisor" && user && (
               <AIAdvisorPage onSignInClick={handleSignInClick} />
             )}
-            {currentPage === "choose-box" && user && (
-              <ChooseBoxPage onSignInClick={handleSignInClick} />
-            )}
-            {currentPage === "checkout" && user && <CheckoutPage />}
             {currentPage === "home" && <HomePage />}
           </>
         )}
@@ -147,9 +138,7 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AIRecommendationProvider>
-        <AppContent />
-      </AIRecommendationProvider>
+      <AppContent />
     </AuthProvider>
   );
 }
