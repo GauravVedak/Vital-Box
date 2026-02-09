@@ -1,9 +1,7 @@
-require("dotenv").config();
-const app = require("./src/app.js").default;
-
-const connectDatabase = require("./src/config/database.js");
-
-const { env } = require("./src/config/env.js");
+import "dotenv/config";
+import app from "./src/app.js";
+import connectDatabase from "./src/config/database.js";
+import { env } from "./src/config/env.js";
 
 async function start() {
   try {

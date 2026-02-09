@@ -12,6 +12,7 @@ import {
   PackageOpen,
   Home,
   Zap,
+  Shield,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useAuth } from "./AuthContext";
@@ -24,7 +25,12 @@ const menuItems = [
   { id: "home", label: "Home", href: "#home", icon: Home },
   { id: "bmi", label: "BMI Calculator", href: "#bmi", icon: Activity },
   { id: "ai-advisor", label: "AI Advisor", href: "#ai-advisor", icon: Brain },
-  { id: "choose-box", label: "Choose Box", href: "#choose-box", icon: PackageOpen },
+  {
+    id: "choose-box",
+    label: "Choose Box",
+    href: "#choose-box",
+    icon: PackageOpen,
+  },
 ];
 
 export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
@@ -75,6 +81,12 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
     window.location.hash = "#user-panel";
   };
 
+  const handleOpenAdminPanel = () => {
+    setShowUserMenu(false);
+    setMobileMenuOpen(false);
+    window.location.hash = "#admin-panel";
+  };
+
   return (
     <>
       {/* Desktop Navbar */}
@@ -101,7 +113,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <span className="font-bold tracking-tight text-lg">Vital Box</span>
+              <span className="font-bold tracking-tight text-lg">
+                Vital Box
+              </span>
             </motion.button>
 
             {/* Menu Items */}
@@ -125,7 +139,11 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-600"
                       layoutId="activeTab"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                       style={{ borderRadius: "9999px" }}
                     />
                   )}
@@ -176,7 +194,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                       className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
                     >
                       <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
-                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="font-semibold text-gray-900">
+                          {user.name}
+                        </p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
 
@@ -185,8 +205,18 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                         className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <User className="w-4 h-4" />
-                        <span>Open User Panel</span>
+                        <span className="cursor-pointer">Open User Panel</span>
                       </button>
+
+                      {user?.role === "admin" && (
+                        <button
+                          onClick={handleOpenAdminPanel}
+                          className="w-full px-4 py-3 flex items-center gap-2 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span className="cursor-pointer">Admin Panel</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={handleLogout}
@@ -318,7 +348,9 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                   {user ? (
                     <>
                       <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl mb-2">
-                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        <p className="font-semibold text-gray-900">
+                          {user.name}
+                        </p>
                         <p className="text-sm text-gray-600">{user.email}</p>
                       </div>
 
@@ -327,8 +359,18 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
                         className="w-full px-4 py-3 flex items-center gap-2 text-gray-700 hover:bg-gray-50 rounded-2xl transition-colors mb-2"
                       >
                         <User className="w-4 h-4" />
-                        <span>Open User Panel</span>
+                        <span className="cursor-pointer">Open User Panel</span>
                       </button>
+
+                      {user?.role === "admin" && (
+                        <button
+                          onClick={handleOpenAdminPanel}
+                          className="w-full px-4 py-3 flex items-center gap-2 text-emerald-700 hover:bg-emerald-50 rounded-2xl transition-colors mb-2"
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span className="cursor-pointer">Admin Panel</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={handleLogout}

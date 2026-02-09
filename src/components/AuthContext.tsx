@@ -79,21 +79,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on first render
+  // Load user from localStorage on first render, then sync with server
   useEffect(() => {
-    try {
-      const raw =
-        typeof window !== "undefined"
-          ? window.localStorage.getItem(STORAGE_KEY)
-          : null;
-      if (raw) {
-        setUser(JSON.parse(raw));
+    const loadUser = async () => {
+      try {
+        const raw =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem(STORAGE_KEY)
+            : null;
+        if (raw) {
+          setUser(JSON.parse(raw));
+          // Sync with server to get latest role (e.g. after being promoted to admin)
+          const res = await fetch("/api/auth/me", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+              const u: User = {
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                role: data.user.role || "user",
+                fitnessMetrics: data.user.fitnessMetrics,
+              };
+              setUser(u);
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+              }
+            }
+          }
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    loadUser();
   }, []);
 
   const saveUser = (u: User | null) => {
@@ -203,7 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: data.user.id,
           name: data.user.name ?? data.user.email,
           email: data.user.email,
-          role: "user",
+          role: data.user.role || "user",
           fitnessMetrics: data.user.fitnessMetrics,
         };
         saveUser(u);

@@ -55,11 +55,9 @@ export async function POST(req: Request) {
     };
 
     // Generate JWT token for auto-login after signup
-    const token = jwt.sign(
-      { sub: userId, email },
-      JWT_SECRET,
-      { expiresIn: ACCESS_EXPIRES_SECONDS },
-    );
+    const token = jwt.sign({ sub: userId, email }, JWT_SECRET, {
+      expiresIn: ACCESS_EXPIRES_SECONDS,
+    });
 
     const res = NextResponse.json({ ok: true, user }, { status: 201 });
 
