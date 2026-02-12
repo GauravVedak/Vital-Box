@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, Feat(V1.6)-Workflow-Authentication, main]
   pull_request:
-    branches: [master, main]
+    branches: [master, Feat(V1.6)-Workflow-Authentication, main]
 
 jobs:
   test:
