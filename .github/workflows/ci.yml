@@ -12,8 +12,6 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: 1
       MONGOMS_DOWNLOAD_MIRROR: https://fastdl.mongodb.org # speeds up mongo-memory-server
-      MONGODB_URI: mongodb://127.0.0.1:27017/ci
-      MONGO_URI: mongodb://127.0.0.1:27017/ci
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,3 +30,6 @@ jobs:
 
       - name: Build app
         run: npm run build
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/ci
+          MONGO_URI: mongodb://127.0.0.1:27017/ci
