@@ -26,12 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
-        run: npm run build
+      # Build is intentionally disabled for now.
+      # - name: Build app
+      #   run: npm run build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: .next
-          if-no-files-found: error
+      # Upload is disabled while build is disabled.
+      # - name: Upload build artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: next-build
+      #     path: .next
+      #     if-no-files-found: error

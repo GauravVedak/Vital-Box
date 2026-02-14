@@ -5,7 +5,7 @@ import { getDb } from "../../../lib/mongodb";
 
 
 // Function to retrieve the User Authentication Credentials...
-export async function GET(_req: Request) {
+export async function GETUSER() {
   try {
     const db = await getDb("Users");
     const collections = await db.listCollections().toArray();
@@ -14,3 +14,4 @@ export async function GET(_req: Request) {
     return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
   }
 }
+

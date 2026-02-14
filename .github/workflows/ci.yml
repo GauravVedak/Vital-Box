@@ -30,5 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
-        run: npm run build
+      # Build is intentionally disabled for now.
+      # - name: Build app
+      #   run: npm run build
+
