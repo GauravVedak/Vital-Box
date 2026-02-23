@@ -36,7 +36,7 @@ function AppContent() {
   }, []);
 
   // Protected pages that require authentication
-  const protectedPages = ["bmi", "ai-advisor", "user-panel", "admin-panel"];
+  const protectedPages = ["bmi", "ai-advisor", "user-panel"];
   const isProtectedPage = protectedPages.includes(currentPage);
 
   // If user tries to access protected page without being logged in
@@ -88,12 +88,6 @@ function AppContent() {
     window.location.hash = "#home";
   };
 
-  useEffect(() => {
-    if (currentPage === "admin-panel" && user && user.role !== "admin") {
-      window.location.hash = "#home";
-    }
-  }, [currentPage, user]);
-
   // Show authentication pages
   if (authMode === "signin") {
     return (
@@ -125,17 +119,13 @@ function AppContent() {
       <div className="relative z-10">
         {currentPage === "user-panel" && user ? (
           <UserPanel />
-        ) : currentPage === "admin-panel" && user?.role === "admin" ? (
-          <AdminPanel />
         ) : (
           <>
             <MinimalNavbar onSignInClick={handleSignInClick} />
             {currentPage === "bmi" && user && (
               <BMICalculatorPage onSignInClick={handleSignInClick} />
             )}
-            {currentPage === "ai-advisor" && user && (
-              <AIAdvisorPage onSignInClick={handleSignInClick} />
-            )}
+            {currentPage === "ai-advisor" && user && <AIAdvisorPage />}
             {currentPage === "home" && <HomePage />}
           </>
         )}

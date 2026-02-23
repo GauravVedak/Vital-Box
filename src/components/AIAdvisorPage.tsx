@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useAuth } from "./AuthContext";
 import { useAIGuidance, type AmazonLink } from "./useAIGuidance";
@@ -9,7 +8,6 @@ import {
   Sparkles,
   Package,
   Activity,
-  User,
   TrendingUp,
   Heart,
   Zap,
@@ -31,11 +29,7 @@ interface Message {
   disclaimers?: string[];
 }
 
-interface AIAdvisorPageProps {
-  onSignInClick?: () => void;
-}
-
-export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
+export function AIAdvisorPage() {
   const { user } = useAuth();
   const { ask } = useAIGuidance();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -97,7 +91,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   }, [user]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -143,6 +137,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   };
 
   const handleQuickAction = (query: string) => {
+    if (isTyping) return;
     setInputMessage(query);
     setTimeout(() => {
       handleSendMessage();
@@ -156,7 +151,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   };
 
   const handleClearChat = () => {
-    setMessages([messages[0]]); // Keep only the greeting
+    setMessages((prev) => (prev.length ? [prev[0]] : [])); // Keep only the greeting if present
   };
 
   const quickActions = [
