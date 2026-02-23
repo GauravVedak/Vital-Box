@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Badge } from "./ui/badge";
 import { useAuth } from "./AuthContext";
 import { useAIGuidance, type AmazonLink } from "./useAIGuidance";
 import {
@@ -10,7 +8,6 @@ import {
   Sparkles,
   Package,
   Activity,
-  User,
   TrendingUp,
   Heart,
   Zap,
@@ -32,11 +29,7 @@ interface Message {
   disclaimers?: string[];
 }
 
-interface AIAdvisorPageProps {
-  onSignInClick?: () => void;
-}
-
-export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
+export function AIAdvisorPage() {
   const { user } = useAuth();
   const { ask } = useAIGuidance();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -98,7 +91,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   }, [user]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -144,6 +137,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   };
 
   const handleQuickAction = (query: string) => {
+    if (isTyping) return;
     setInputMessage(query);
     setTimeout(() => {
       handleSendMessage();
@@ -157,7 +151,7 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
   };
 
   const handleClearChat = () => {
-    setMessages([messages[0]]); // Keep only the greeting
+    setMessages((prev) => (prev.length ? [prev[0]] : [])); // Keep only the greeting if present
   };
 
   const quickActions = [
@@ -348,9 +342,9 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
                   <h3 className="text-gray-900 text-sm font-bold">
                     AI Health Advisor
                   </h3>
-                  <Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs border-none px-2 py-0">
+                  <span className="inline-flex items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs px-2 py-0.5">
                     Online
-                  </Badge>
+                  </span>
                 </div>
               </div>
 
@@ -493,9 +487,9 @@ export function AIAdvisorPage({ onSignInClick }: AIAdvisorPageProps) {
                                     <h4 className="text-gray-900 font-bold text-base mb-1">
                                       {link.searchQuery}
                                     </h4>
-                                    <Badge className="bg-emerald-100 text-emerald-700 text-xs border-none">
+                                    <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5">
                                       {link.category}
-                                    </Badge>
+                                    </span>
                                   </div>
                                 </div>
 
