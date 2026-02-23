@@ -6,7 +6,6 @@ import { BMICalculatorPage } from "./components/bmi-calculator/BMICalculatorPage
 import { SignInPage } from "./components/SignInPage";
 import { SignUpPage } from "./components/SignUpPage";
 import { UserPanel } from "./components/UserPanel";
-import { AdminPanel } from "./components/admin-panel";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 
