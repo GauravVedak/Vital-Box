@@ -121,6 +121,8 @@ export function UserPanel() {
   const [goalWeightInput, setGoalWeightInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const adminNote = user?.adminNote?.trim() || "";
+
   // Read from user.fitnessMetrics - NO local state overrides
   const bmiHistory = user?.fitnessMetrics?.bmiHistory ?? [];
   const latestBMI = user?.fitnessMetrics?.latestBMI;
@@ -378,6 +380,25 @@ export function UserPanel() {
                 </div>
               )}
             </div>
+
+            {/* Admin note, if any */}
+            {adminNote && (
+              <Card className="border-emerald-300 bg-emerald-50/80">
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold text-emerald-900">
+                    Note from your coach
+                  </CardTitle>
+                  <CardDescription className="text-xs text-emerald-800">
+                    Personalized guidance added by an admin.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-800 whitespace-pre-line">
+                    {adminNote}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* If no BMI data yet, show guidance */}
             {bmiHistory.length === 0 && !latestBMI && (

@@ -8,9 +8,7 @@ import { SignUpPage } from "./components/SignUpPage";
 import { UserPanel } from "./components/UserPanel";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { Toaster } from "./components/ui/sonner";
-
-//First Deployment: 2026-02-22
-// Deployment made by: Naveed Ahmed Syed
+import { AdminPanel } from "./components/AdminPanel";
 
 // Main app content with authentication checks
 function AppContent() {
@@ -39,7 +37,7 @@ function AppContent() {
   }, []);
 
   // Protected pages that require authentication
-  const protectedPages = ["bmi", "ai-advisor", "user-panel"];
+  const protectedPages = ["bmi", "ai-advisor", "user-panel", "admin-panel"];
   const isProtectedPage = protectedPages.includes(currentPage);
 
   // If user tries to access protected page without being logged in
@@ -122,6 +120,8 @@ function AppContent() {
       <div className="relative z-10">
         {currentPage === "user-panel" && user ? (
           <UserPanel />
+        ) : currentPage === "admin-panel" && user?.role === "admin" ? (
+          <AdminPanel />
         ) : (
           <>
             <MinimalNavbar onSignInClick={handleSignInClick} />

@@ -44,6 +44,7 @@ interface User {
   avatar?: string;
   role: "user" | "admin";
   fitnessMetrics?: FitnessMetrics;
+  adminNote?: string;
 }
 
 interface AuthResult {
@@ -60,10 +61,18 @@ interface FitnessMetricsUpdate {
   bmiHistoryEntry?: BMIHistoryEntry;
 }
 
+interface LoginOptions {
+  asAdmin?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<AuthResult>;
+  login: (
+    email: string,
+    password: string,
+    options?: LoginOptions,
+  ) => Promise<AuthResult>;
   signup: (name: string, email: string, password: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
   updateFitnessMetrics: (metrics: FitnessMetricsUpdate) => Promise<void>;
@@ -89,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : null;
         if (raw) {
           setUser(JSON.parse(raw));
-          // Sync with server to get latest role (e.g. after being promoted to admin)
+          // Sync with server to get latest role / admin note
           const res = await fetch("/api/auth/me", {
             method: "GET",
             credentials: "include",
@@ -103,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 email: data.user.email,
                 role: data.user.role || "user",
                 fitnessMetrics: data.user.fitnessMetrics,
+                adminNote: data.user.adminNote || "",
               };
               setUser(u);
               if (typeof window !== "undefined") {
@@ -166,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           role: data.user.role || "user",
           fitnessMetrics: data.user.fitnessMetrics,
+          adminNote: data.user.adminNote || "",
         };
         saveUser(u);
       }
@@ -186,7 +197,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (!res.ok || res.status === 401) {
-          // Token expired or invalid - logout
           console.log("Token expired, logging out...");
           await logout();
         }
@@ -207,13 +217,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string,
+    options?: LoginOptions,
   ): Promise<AuthResult> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          asAdmin: options?.asAdmin ?? false,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -229,6 +244,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           role: data.user.role || "user",
           fitnessMetrics: data.user.fitnessMetrics,
+          adminNote: data.user.adminNote || "",
         };
         saveUser(u);
       }
@@ -266,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           role: "user",
           fitnessMetrics: data.user.fitnessMetrics,
+          adminNote: data.user.adminNote || "",
         };
         saveUser(u);
       }
@@ -309,7 +326,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      // If token expired during this call, logout
       if (res.status === 401) {
         console.log("Token expired during metrics update, logging out...");
         await logout();
@@ -321,7 +337,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Sync with server response
       await refreshUser();
     } catch (e) {
       console.error("Failed to persist fitness metrics", e);

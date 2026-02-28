@@ -20,6 +20,7 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
 
@@ -34,7 +35,8 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
     setIsLoading(true);
     setError(null);
 
-    const res = await login(email, password);
+    // pass the intent to the auth layer
+    const res = await login(email, password, { asAdmin: isAdminLogin });
     setIsLoading(false);
 
     if (!res.ok) {
@@ -44,7 +46,9 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
     }
 
     toast.success("Welcome back!");
-    onSuccess();
+    // if backend/session says user is admin, you can redirect to /admin here
+    // otherwise default dashboard
+    onSuccess(isAdminLogin ? "admin-panel" : "home");
   };
 
   return (
@@ -53,7 +57,6 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
 
       <div className="relative z-10 w-full max-w-5xl flex justify-center">
         <Card className="w-full max-w-xl p-8 md:p-10 rounded-[2.25rem] shadow-2xl bg-white/95 backdrop-blur-md border border-gray-100">
-
           {/* Logo + title */}
           <div className="flex flex-col items-center gap-3 mb-6">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
@@ -117,12 +120,29 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword
-                    ? <EyeOff className="w-4 h-4" />
-                    : <Eye className="w-4 h-4" />
-                  }
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
+            </div>
+
+            {/* Admin login toggle */}
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  checked={isAdminLogin}
+                  onChange={(e) => setIsAdminLogin(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <span className="select-none">
+                  Login as admin
+                </span>
+              </label>
             </div>
 
             {error && (
@@ -170,7 +190,6 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
               </span>
             </Button>
           </div>
-
         </Card>
       </div>
     </div>

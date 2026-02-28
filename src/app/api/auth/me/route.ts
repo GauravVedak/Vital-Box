@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     if (!token) {
       return NextResponse.json(
         { ok: false, message: "Unauthorized" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
     } catch {
       return NextResponse.json(
         { ok: false, message: "Invalid token" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET(req: Request) {
     if (!user) {
       return NextResponse.json(
         { ok: false, message: "User not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -50,6 +50,7 @@ export async function GET(req: Request) {
       email: user.email,
       role: user.role || "user",
       fitnessMetrics: user.fitnessMetrics || {},
+      adminNote: user.adminNote || "",
     };
 
     return NextResponse.json({ ok: true, user: safeUser });
@@ -57,7 +58,7 @@ export async function GET(req: Request) {
     console.error("Error fetching user:", err);
     return NextResponse.json(
       { ok: false, message: "Server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

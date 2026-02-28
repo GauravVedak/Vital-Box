@@ -46,6 +46,7 @@ export async function POST(req: Request) {
       email: user.email,
       role: user.role || "user",
       fitnessMetrics: user.fitnessMetrics || {},
+      adminNote: user.adminNote || "",
     };
 
     const token = jwt.sign(
