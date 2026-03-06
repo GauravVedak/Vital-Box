@@ -110,7 +110,7 @@ const CustomTooltip: React.FC<TooltipProps & { goalWeight: number | null }> = ({
 
 export function UserPanel() {
   const { user, logout, refreshUser } = useAuth();
-  const [activeSection, setActiveSection] =
+  const [ , setActiveSection] =
     useState<PanelSection>("body-stats");
   const [isStatsFormOpen, setIsStatsFormOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<PanelForm>("body");
