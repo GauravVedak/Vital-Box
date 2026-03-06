@@ -1,3 +1,4 @@
+// middleware.ts (project root - same level as package.json)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -17,9 +18,9 @@ interface RateLimitData {
 const rateLimitStore = new Map<string, RateLimitData>();
 
 function getClientIp(request: NextRequest): string {
-  return request.ip || 
-         request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
          request.headers.get('x-real-ip') || 
+         request.headers.get('x-client-ip') ||
          'anonymous';
 }
 
@@ -29,8 +30,9 @@ function isBot(userAgent: string | null): boolean {
 }
 
 function isLocalhost(request: NextRequest): boolean {
-  return request.headers.get('host')?.includes('localhost') || 
-         request.headers.get('host')?.includes('127.0.0.1');
+  const host = request.headers.get('host');
+  // FIXED: Explicit null checks to ensure boolean return type
+  return !!(host && (host.includes('localhost') || host.includes('127.0.0.1')));
 }
 
 export function middleware(request: NextRequest) {
@@ -38,6 +40,7 @@ export function middleware(request: NextRequest) {
   const clientIp = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || '';
   
+  // Skip ALL security checks on localhost (for dev)
   if (isLocalhost(request)) {
     const response = NextResponse.next();
     return response;
@@ -51,14 +54,15 @@ export function middleware(request: NextRequest) {
   // Rate limiting (all paths)
   const cacheKey = `rate:${clientIp}`;
   const now = Date.now();
-  const data = rateLimitStore.get(cacheKey) as RateLimitData | undefined;  
+  const data = rateLimitStore.get(cacheKey) as RateLimitData | undefined;
+  
   if (!data || now > data.resetTime) {
     rateLimitStore.set(cacheKey, {
       count: 1,
       resetTime: now + RATE_LIMIT_WINDOW
     });
   } else {
-    const newData = { ...data, count: data.count + 1 }; 
+    const newData = { ...data, count: data.count + 1 };
     rateLimitStore.set(cacheKey, newData);
     
     if (newData.count > RATE_LIMIT_REQUESTS) {
@@ -77,7 +81,7 @@ export function middleware(request: NextRequest) {
   // Extra strict rate limiting for admin paths
   if (PROTECTED_PATHS.some(path => pathname.startsWith(path))) {
     const adminKey = `admin:${clientIp}`;
-    const adminData = rateLimitStore.get(adminKey) as RateLimitData | undefined;  
+    const adminData = rateLimitStore.get(adminKey) as RateLimitData | undefined;
     
     if (adminData && now <= adminData.resetTime && adminData.count >= 10) {
       return new NextResponse('Admin access limited', { status: 429 });
