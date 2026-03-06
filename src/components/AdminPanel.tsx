@@ -1,4 +1,3 @@
-// src/components/AdminPanel.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -7,7 +6,6 @@ import { useAuth } from "./AuthContext";
 import {
   Card,
   CardHeader,
-  CardTitle,
   CardContent,
 } from "./ui/card";
 import { Button } from "./ui/button";
