@@ -215,10 +215,6 @@ export function AIAdvisorPage() {
 
           {/* Header */}
           <header className={s.header}>
-            <div className={s.eyebrow}>
-              <span className={s.eyebrowDot} />
-              AI-Powered
-            </div>
             <h1 className={s.title}>
               Your supplement <span className={s.titleAccent}>advisor</span>
             </h1>
