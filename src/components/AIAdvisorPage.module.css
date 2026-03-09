@@ -98,7 +98,7 @@
 .page {
   position: relative;
   z-index: 1;
-  height: 100svh;
+  height: 90svh;
   display: flex;
   flex-direction: column;
   align-items: center;
