@@ -108,7 +108,7 @@ Short-lived access tokens are refreshed automatically using a refresh
 token when they expire, allowing users to remain logged in without
 repeated authentication.
 
-![Token Lifecycle Refresh Handshake](TokenLifecycleRefreshHandshake.png)
+![Token Lifecycle and Refresh Handshake](TokenLifeCycleRefreshHandshake.png)
 
 ### Logout
 
