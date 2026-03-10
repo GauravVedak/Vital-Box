@@ -111,28 +111,35 @@ function DotGrid() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     const SPACING = 28;
     const RADIUS  = 1.2;
-    const REACH   = 110;   // px — how far the effect radiates
-    const LIFT    = 3.5;   // max dot displacement toward cursor
+    const REACH   = 110;   
+    const LIFT    = 3.5;   
     const BASE_ALPHA = 0.055;
     const PEAK_ALPHA = 0.38;
 
     let cols = 0, rows = 0, W = 0, H = 0;
 
+    /**
+     * FIX: Added null-safety check for canvas inside resize.
+     * We use window.devicePixelRatio for high-DPI displays.
+     */
     function resize() {
+      if (!canvas) return;
       W = canvas.offsetWidth;
       H = canvas.offsetHeight;
-      canvas.width  = W * devicePixelRatio;
-      canvas.height = H * devicePixelRatio;
-      ctx.scale(devicePixelRatio, devicePixelRatio);
+      canvas.width  = W * window.devicePixelRatio;
+      canvas.height = H * window.devicePixelRatio;
+      ctx!.scale(window.devicePixelRatio, window.devicePixelRatio);
       cols = Math.ceil(W / SPACING) + 1;
       rows = Math.ceil(H / SPACING) + 1;
     }
 
     function draw() {
+      if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, W, H);
       const mx = mouse.current.x;
       const my = mouse.current.y;
@@ -144,16 +151,13 @@ function DotGrid() {
           const dx = mx - bx;
           const dy = my - by;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const t = Math.max(0, 1 - dist / REACH); // 0..1
+          const t = Math.max(0, 1 - dist / REACH);
 
-          // nudge dot toward cursor
           const nx = bx + (dist > 0 ? (dx / dist) * LIFT * t : 0);
           const ny = by + (dist > 0 ? (dy / dist) * LIFT * t : 0);
 
-          // alpha: base + boost near cursor
           const alpha = BASE_ALPHA + (PEAK_ALPHA - BASE_ALPHA) * t * t;
 
-          // color: white at rest, emerald tint near cursor
           const g = Math.round(185 + (255 - 185) * (1 - t));
           const b = Math.round(129 + (255 - 129) * (1 - t));
           ctx.beginPath();
@@ -177,14 +181,15 @@ function DotGrid() {
     resize();
     draw();
 
-    canvas.parentElement?.addEventListener("mousemove", onMouseMove);
-    canvas.parentElement?.addEventListener("mouseleave", onMouseLeave);
+    const parent = canvas.parentElement;
+    parent?.addEventListener("mousemove", onMouseMove);
+    parent?.addEventListener("mouseleave", onMouseLeave);
 
     return () => {
       cancelAnimationFrame(raf.current);
       ro.disconnect();
-      canvas.parentElement?.removeEventListener("mousemove", onMouseMove);
-      canvas.parentElement?.removeEventListener("mouseleave", onMouseLeave);
+      parent?.removeEventListener("mousemove", onMouseMove);
+      parent?.removeEventListener("mouseleave", onMouseLeave);
     };
   }, []);
 
@@ -224,6 +229,10 @@ const trustItems = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+/**
+ * FIX: Ensure this is a NAMED export. 
+ * The error "The export HomePage was not found" occurs if this is a default export.
+ */
 export function HomePage() {
   const { user } = useAuth();
 
