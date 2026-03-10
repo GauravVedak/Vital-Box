@@ -1,19 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card } from "./ui/card";
-import { Separator } from "./ui/separator";
-import { Eye, EyeOff, Loader2, LogIn, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
+import styles from "./SignUpPage.module.css";
 
 interface SignUpPageProps {
   onSwitchToSignIn: () => void;
   onSuccess: (redirectTo?: string) => void;
 }
+
+const NAME_RE = /^[\p{L}\p{M}' \-]{1,60}$/u;
+
+// “Reasonable” email, with some extra constraints:
+// - local part: 2–64 chars, letters/digits and _.+-
+// - domain: at least two labels, each 2+ chars, letters/digits/hyphens
+// - TLD: 2+ letters
+const EMAIL_RE =
+  /^(?=.{6,254}$)([A-Za-z0-9](?:[A-Za-z0-9._+-]{0,62}[A-Za-z0-9])?)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+
+// Password: 8–128 chars, at least 1 lowercase, 1 uppercase, 1 digit, 1 symbol
+// Allowed symbols: @$!%*#?&^_-+=
+const PASSWORD_RE =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&^_\-+=])[A-Za-z\d@$!%*#?&^_\-+=]{8,128}$/;
 
 export function SignUpPage({ onSwitchToSignIn, onSuccess }: SignUpPageProps) {
   const [fullName, setFullName] = useState("");
@@ -24,191 +34,223 @@ export function SignUpPage({ onSwitchToSignIn, onSuccess }: SignUpPageProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const { signup } = useAuth();
+
+  const validateInputs = () => {
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password;
+
+    if (!trimmedName || !trimmedEmail || !trimmedPassword || !confirmPassword) {
+      return "Please fill in all fields.";
+    }
+
+    if (!NAME_RE.test(trimmedName)) {
+      return "Name may only contain letters, spaces, hyphens, and apostrophes.";
+    }
+
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      return "Please enter a valid email address.";
+    }
+
+    // Extra semantic checks to avoid things like a@test.com, a@a.com, a@a
+    const [localPart, domainPart] = trimmedEmail.split("@");
+    if (!localPart || !domainPart) {
+      return "Please enter a valid email address.";
+    }
+
+    // Require at least 2 chars in local part and each domain label
+    if (localPart.length < 2) {
+      return "Email local part is too short.";
+    }
+
+    const domainLabels = domainPart.split(".");
+    if (domainLabels.length < 2) {
+      return "Email domain must include a dot and a valid TLD.";
+    }
+    if (domainLabels.some((label) => label.length < 2)) {
+      return "Each part of the email domain must be at least 2 characters.";
+    }
+
+    if (!PASSWORD_RE.test(trimmedPassword)) {
+      return "Password must be 8–128 characters and include an uppercase letter, lowercase letter, number, and symbol.";
+    }
+
+    if (trimmedPassword !== confirmPassword) {
+      return "Passwords don't match.";
+    }
+
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError(null);
 
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields.");
-      return;
-    }
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password;
 
-    if (password !== confirmPassword) {
-      setError("Passwords don't match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const validationError = validateInputs();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setIsLoading(true);
-
-    const res = await signup(fullName, email, password);
-
+    const res = await signup(trimmedName, trimmedEmail, trimmedPassword);
     setIsLoading(false);
 
     if (!res.ok) {
-      setError(res.message || "Failed to create account.");
-      toast.error(res.message || "Failed to create account.");
+      setError(res.message ?? "Failed to create account.");
+      toast.error(res.message ?? "Signup failed.");
       return;
     }
 
-    toast.success("Account created successfully!");
+    toast.success("Account created. Welcome to Vital Box.");
     onSuccess();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#ecfeff,_#f9fafb_45%,_#eef2ff)] px-4 py-16">
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-[0.08] mix-blend-soft-light" />
+    <div className={styles.root}>
+      <div className={styles.grid} aria-hidden />
+      <div className={styles.orb} aria-hidden />
 
-      <div className="relative z-10 w-full max-w-5xl flex justify-center">
-        <Card className="w-full max-w-xl p-8 md:p-10 rounded-[2.25rem] shadow-2xl bg-white/95 backdrop-blur-md border border-gray-100">
-          <div className="flex flex-col items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-              <Sparkles className="w-5 h-5 text-white" />
+      <div className={styles.panel}>
+        <div className={styles.brand}>
+          <span className={styles.brandDot} />
+          <span className={styles.brandName}>Vital Box</span>
+        </div>
+
+        <h1 className={styles.heading}>Create account</h1>
+        <p className={styles.sub}>Start your health journey today.</p>
+
+        <form onSubmit={handleSubmit} className={styles.form} noValidate>
+          <div className={styles.field}>
+            <label htmlFor="su-name" className={styles.label}>
+              Full name
+            </label>
+            <input
+              id="su-name"
+              type="text"
+              autoComplete="name"
+              placeholder="Jane Doe"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              disabled={isLoading}
+              className={styles.input}
+              maxLength={60}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="su-email" className={styles.label}>
+              Email
+            </label>
+            <input
+              id="su-email"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+              className={styles.input}
+              maxLength={254}
+            />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="su-password" className={styles.label}>
+              Password
+            </label>
+            <div className={styles.inputWrap}>
+              <input
+                id="su-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+                className={`${styles.input} ${styles.inputPr}`}
+                maxLength={128}
+              />
+              <button
+                type="button"
+                className={styles.eye}
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
             </div>
-            <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
-              Create your account
-            </h2>
-            <p className="text-sm text-gray-600 text-center">
-              Join Vital Box and start your health journey.
+            <span className={styles.hint}>
+              8–128 characters · at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol
+            </span>
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="su-confirm" className={styles.label}>
+              Confirm password
+            </label>
+            <div className={styles.inputWrap}>
+              <input
+                id="su-confirm"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isLoading}
+                className={`${styles.input} ${styles.inputPr}`}
+                maxLength={128}
+              />
+              <button
+                type="button"
+                className={styles.eye}
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <p className={styles.error} role="alert">
+              {error}
             </p>
-          </div>
+          )}
 
-          <div className="relative my-5">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs text-gray-500">
-              Sign up with email
-            </span>
-          </div>
+          <button type="submit" disabled={isLoading} className={styles.submit}>
+            {isLoading ? (
+              <>
+                <Loader2 size={15} className={styles.spin} /> Creating account…
+              </>
+            ) : (
+              "Create account"
+            )}
+          </button>
+        </form>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="John Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                disabled={isLoading}
-                className="h-11 rounded-xl"
-              />
-            </div>
+        <div className={styles.divider}>
+          <span className={styles.dividerLine} />
+          <span className={styles.dividerLabel}>or</span>
+          <span className={styles.dividerLine} />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="h-11 rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="h-11 rounded-xl pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="h-11 rounded-xl pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="mt-1 w-full h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm md:text-base font-medium shadow-md transition-all hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-3">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Creating your account…
-                </span>
-              ) : (
-                <span className="flex items-center gap-3">
-                  <LogIn className="w-4 h-4" />
-                  Create account
-                </span>
-              )}
-            </Button>
-          </form>
-
-          <div className="flex items-center gap-4 pt-6">
-            <Separator className="flex-1" />
-            <span className="text-xs md:text-sm text-gray-500 whitespace-nowrap">
-              Already have an account?
-            </span>
-            <Separator className="flex-1" />
-          </div>
-
-          <div className="mt-4 text-center">
-            <Button
-              variant="outline"
-              disabled={isLoading}
-              onClick={onSwitchToSignIn}
-              className="w-full h-12 rounded-full border-gray-200 text-sm md:text-base hover:border-emerald-400"
-            >
-              <span className="flex items-center gap-3 justify-center">
-                <LogIn className="w-4 h-4" />
-                Sign in instead
-              </span>
-            </Button>
-          </div>
-        </Card>
+        <button
+          type="button"
+          className={styles.ghost}
+          onClick={onSwitchToSignIn}
+          disabled={isLoading}
+        >
+          Sign in instead
+        </button>
       </div>
     </div>
   );
