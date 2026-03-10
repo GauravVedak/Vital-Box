@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type FormEvent } from "react";
+import { useState, useMemo, useEffect, type FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Activity,
@@ -9,6 +9,7 @@ import {
   Weight,
   Target,
   Home,
+  Menu,
   X,
   Save,
 } from "lucide-react";
@@ -112,7 +113,9 @@ export function UserPanel() {
   const { user, logout, refreshUser } = useAuth();
   const [ , setActiveSection] =
     useState<PanelSection>("body-stats");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isStatsFormOpen, setIsStatsFormOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [activeForm, setActiveForm] = useState<PanelForm>("body");
   const [bodyStatsForm, setBodyStatsForm] = useState<BodyStatsForm>({
     weight: "",
@@ -124,11 +127,24 @@ export function UserPanel() {
   const adminNote = user?.adminNote?.trim() || "";
 
   // Read from user.fitnessMetrics - NO local state overrides
-  const bmiHistory = user?.fitnessMetrics?.bmiHistory ?? [];
+  const bmiHistory = useMemo(
+    () => user?.fitnessMetrics?.bmiHistory ?? [],
+    [user?.fitnessMetrics?.bmiHistory]
+  );
   const latestBMI = user?.fitnessMetrics?.latestBMI;
   const goalWeight = user?.fitnessMetrics?.goalWeight ?? null;
   const savedHeight = user?.fitnessMetrics?.height ?? 0;
   const savedHeightUnit = user?.fitnessMetrics?.unit ?? "metric";
+
+  // Responsive check for desktop vs mobile
+  useEffect(() => {
+  const checkScreen = () => setIsDesktop(window.innerWidth >= 768);
+
+  checkScreen();
+  window.addEventListener("resize", checkScreen);
+
+  return () => window.removeEventListener("resize", checkScreen);
+}, []);
 
   // Compute chart data from bmiHistory
   const chartData: ChartPoint[] = useMemo(() => {
@@ -190,11 +206,13 @@ export function UserPanel() {
     chartData.length > 0 ? Math.max(...chartData.map((p) => p.bmi)) : 0;
 
   const handleLogout = () => {
+    setIsMobileSidebarOpen(false);
     logout();
     window.location.hash = "#home";
   };
 
   const handleBackToHome = () => {
+    setIsMobileSidebarOpen(false);
     window.location.hash = "#home";
   };
 
@@ -301,56 +319,77 @@ export function UserPanel() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-emerald-50/40 to-white overflow-x-hidden">
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex min-h-screen">
         {/* Left Sidebar Navigation (desktop-first) */}
-        <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Health Dashboard</h2>
-            <p className="text-sm text-gray-600 mt-1 truncate">{user?.name}</p>
-          </div>
+        {isDesktop && (
+          <aside className="w-64 flex flex-col bg-white border-r border-gray-200 shrink-0">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Health Dashboard</h2>
+              <p className="text-sm text-gray-600 mt-1 truncate">{user?.name}</p>
+            </div>
 
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            <motion.button
-              onClick={handleBackToHome}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">Back To Home</span>
-            </motion.button>
-            <motion.button
-              onClick={() => setActiveSection("body-stats")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Activity className="w-5 h-5" />
-              <span className="font-medium">Body Stats</span>
-            </motion.button>
-          </nav>
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              <motion.button
+                onClick={handleBackToHome}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Home className="w-5 h-5" />
+                <span className="font-medium">Back To Home</span>
+              </motion.button>
 
-          <div className="p-4 border-t border-gray-200">
-            <motion.button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="font-medium">Log out</span>
-            </motion.button>
-          </div>
-        </aside>
+              <motion.button
+                onClick={() => setActiveSection("body-stats")}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Activity className="w-5 h-5" />
+                <span className="font-medium">Body Stats</span>
+              </motion.button>
+            </nav>
 
+            <div className="p-4 border-t border-gray-200">
+              <motion.button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <LogOut className="w-5 h-5" />
+                <span className="font-medium">Log out</span>
+              </motion.button>
+            </div>
+          </aside>
+        )}
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:p-8">
           <div className="relative max-w-6xl mx-auto space-y-6">
+            {!isDesktop && (
+              <div className="sticky top-0 z-30 -mx-4 flex items-center justify-between border-b border-gray-200 bg-white/90 px-4 py-3 backdrop-blur">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/80 text-emerald-700 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white hover:shadow-lg active:scale-95"
+                  aria-label="Open sidebar navigation"
+                >
+                  <Menu className="h-5.5 w-5.5 stroke-[2.25]" />
+                </button>
+                <div className="min-w-0 px-3 text-center">
+                  <p className="truncate text-sm font-semibold text-gray-900">
+                    Health Dashboard
+                  </p>
+                  <p className="truncate text-xs text-gray-500">{user?.name}</p>
+                </div>
+                <div className="w-11" aria-hidden />
+              </div>
+            )}
             {/* Header */}
-            <div className="flex items-end justify-between gap-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Body Stats</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Body Stats</h1>
+                <p className="text-gray-600 mt-2 text-sm md:text-base">
                   Track your weight and BMI progress over time
                   {user?.fitnessMetrics?.lastCalculated && (
                     <>
@@ -363,7 +402,7 @@ export function UserPanel() {
                 </p>
               </div>
               {latestBMI && (
-                <div className="inline-flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm">
+                <div className="inline-flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-sm md:w-auto">
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-semibold text-sm">
                     {latestBMI.value.toFixed(1)}
                   </div>
@@ -666,6 +705,81 @@ export function UserPanel() {
 
             {/* Side drawer for forms */}
             <AnimatePresence>
+              {isMobileSidebarOpen && (
+                <div className="fixed inset-0 z-40 flex md:hidden">
+                  <motion.aside
+                    initial={{ x: -280, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -280, opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 260,
+                      damping: 28,
+                    }}
+                    className="flex h-full w-72 flex-col border-r border-gray-200 bg-white shadow-xl"
+                  >
+                    <div className="flex items-center justify-between border-b border-gray-200 p-5">
+                      <div className="min-w-0">
+                        <h2 className="truncate text-lg font-bold text-gray-900">
+                          Health Dashboard
+                        </h2>
+                        <p className="mt-1 truncate text-sm text-gray-600">
+                          {user?.name}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                        className="rounded-full border border-gray-200 p-2 text-gray-500 hover:bg-gray-100"
+                        aria-label="Close sidebar navigation"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <nav className="flex-1 space-y-2 overflow-y-auto p-4">
+                      <motion.button
+                        onClick={handleBackToHome}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Home className="w-5 h-5" />
+                        <span className="font-medium">Back To Home</span>
+                      </motion.button>
+                      <motion.button
+                        onClick={() => {
+                          setActiveSection("body-stats");
+                          setIsMobileSidebarOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Activity className="w-5 h-5" />
+                        <span className="font-medium">Body Stats</span>
+                      </motion.button>
+                    </nav>
+
+                    <div className="p-4 border-t border-gray-200">
+                      <motion.button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Log out</span>
+                      </motion.button>
+                    </div>
+                  </motion.aside>
+                  <div
+                    className="flex-1 bg-black/40"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                  />
+                </div>
+              )}
+
               {isStatsFormOpen && (
                 <div className="fixed inset-0 z-40 flex justify-end">
                   <div
