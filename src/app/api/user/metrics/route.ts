@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { ObjectId } from "mongodb";
-import { getDb } from "../../../../lib/mongodb";
+import { getDb } from "@/lib/mongodb";  
 import {
   safeReadBody,
   safeParse,
