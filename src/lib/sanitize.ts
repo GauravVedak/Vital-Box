@@ -1,18 +1,3 @@
-/**
- * src/lib/sanitize.ts
- *
- * Central security utilities — import from here across every API route.
- *
- * Coverage:
- *  - String sanitization (HTML, null bytes, control chars, JS injection)
- *  - Email + password validation
- *  - Numeric clamping with hard physical bounds
- *  - Proxy-aware IP extraction (Cloudflare → X-Forwarded-For → X-Real-IP)
- *  - Body size guard (blocks giant JSON payloads before parse)
- *  - In-memory sliding-window rate limiter (zero dependencies)
- *  - Response header helpers
- */
-
 import { NextResponse } from "next/server";
 
 // ─── String sanitization ──────────────────────────────────────────────────────
@@ -36,30 +21,36 @@ export function stripHtml(value: string): string {
  */
 export function sanitizeString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") return null;
-  // Reject strings grotesquely over limit before any processing
   if (value.length > maxLength * 4) return null;
   const cleaned = stripHtml(value).slice(0, maxLength);
   return cleaned.length > 0 ? cleaned : null;
 }
 
-/** Strict email validation — RFC 5322 simplified. */
+// "Reasonable" email regex — matches frontend exactly
+// Local part: 2–64 chars, letters/digits + ._+-, domain: proper labels + TLD
+export const EMAIL_RE =
+  /^(?=.{6,254}$)([A-Za-z0-9](?:[A-Za-z0-9._+-]{0,62}[A-Za-z0-9])?)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+
+/** Strict email validation — matches frontend exactly. */
 export function isValidEmail(email: string): boolean {
   if (email.length > 254) return false;
-  if (email.includes("..")) return false;
-  if (/[\s<>()[\]\\,;:"]/.test(email)) return false;
-  return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+  const [localPart, domainPart] = email.split("@");
+  if (!localPart || !domainPart) return false;
+  if (localPart.length < 2) return false;
+  const domainLabels = domainPart.split(".");
+  if (domainLabels.length < 2) return false;
+  if (domainLabels.some((label) => label.length < 2)) return false;
+  return EMAIL_RE.test(email);
 }
 
+export const PASSWORD_RE =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&^_\-+=])[A-Za-z\d@$!%*#?&^_\-+=]{8,128}$/;
+
 /**
- * Password policy: 8–128 chars, at least one letter, at least one digit,
- * not whitespace-only.
+ * Password policy: matches frontend exactly — 8–128 chars + strict requirements.
  */
 export function isValidPassword(password: string): boolean {
-  if (password.length < 8 || password.length > 128) return false;
-  if (!/[a-zA-Z]/.test(password)) return false;
-  if (!/[0-9]/.test(password)) return false;
-  if (/^\s+$/.test(password)) return false;
-  return true;
+  return PASSWORD_RE.test(password);
 }
 
 // ─── Numeric clamping ─────────────────────────────────────────────────────────
@@ -90,7 +81,7 @@ export function isValidUnit(value: unknown): value is "metric" | "imperial" {
  * Call this BEFORE req.json() on every mutating endpoint.
  *
  * @param req      Incoming Request
- * @param maxBytes Max allowed payload size in bytes (default 4 KB)
+ * @param maxBytes Max allowed payload size in bytes
  */
 export async function safeReadBody(
   req: Request,
@@ -152,9 +143,6 @@ function cleanIp(raw: string | null): string | null {
  *  2. X-Forwarded-For   (first entry = originating client)
  *  3. X-Real-IP         (Nginx)
  *  4. "unknown"         (fallback — never crashes)
- *
- * ⚠ Ensure your reverse proxy OVERWRITES X-Forwarded-For rather than
- *   appending to it, to prevent IP spoofing via header injection.
  */
 export function getClientIp(req: Request): string {
   return (
@@ -169,8 +157,6 @@ export function getClientIp(req: Request): string {
 //
 // Zero external dependencies. Effective for single-instance deployments.
 //
-// ⚠ Multi-region caveat: each process has its own store. For global limits
-//   across multiple Vercel/Edge instances, swap the Map for Redis INCR + EXPIRE.
 
 interface RateBucket {
   count:   number;
@@ -187,14 +173,13 @@ if (typeof setInterval !== "undefined") {
       if (bucket.resetAt < now) _store.delete(key);
     }
   }, 5 * 60 * 1000);
-  // Don't block Node.js process from exiting
   if (typeof timer === "object" && "unref" in timer) (timer as NodeJS.Timeout).unref();
 }
 
 /**
  * Check and increment a rate-limit counter.
  *
- * @param key       Unique bucket key, e.g. "login:1.2.3.4"
+ * @param key     
  * @param limit     Max requests allowed within the window
  * @param windowMs  Window duration in milliseconds
  */
