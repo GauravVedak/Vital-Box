@@ -1,0 +1,306 @@
+/**
+ * Shared module — used by both SignInPage.module.css and SignUpPage.module.css
+ * Copy this content into both files, or import from a shared path.
+ *
+ * Matches the app's existing design system:
+ *  - Font: -apple-system / SF Pro
+ *  - Accent: #10b981 (emerald) → #059669
+ *  - Radius: 2rem cards, 0.75rem inputs, 9999px buttons
+ *  - Background: radial light gradient
+ */
+
+.page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #ecfeff, #f9fafb 45%, #eef2ff);
+  padding: 4rem 1rem;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 2.25rem;
+  padding: 2.5rem 2rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.06),
+    0 10px 40px -4px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Header ── */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.iconWrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, #10b981, #0d9488);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #fff;
+}
+
+.title {
+  font-size: 1.375rem;
+  font-weight: 650;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Divider ── */
+
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+  display: block;
+}
+
+.dividerText {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Form ── */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgotDisabled {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  cursor: default;
+  user-select: none;
+}
+
+.input {
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1.5px solid #d1d5db;
+  padding: 0 0.875rem;
+  font-size: 0.9375rem;
+  color: #0f172a;
+  background: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+}
+
+.input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.inputPadRight {
+  padding-right: 2.75rem;
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.eyeBtn:hover {
+  color: #374151;
+}
+
+.eyeIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ── Error ── */
+
+.error {
+  font-size: 0.825rem;
+  color: #ef4444;
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 0.5rem;
+}
+
+/* ── Buttons ── */
+
+.submitBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3rem;
+  border-radius: 9999px;
+  border: none;
+  background: linear-gradient(135deg, #10b981, #0d9488);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 560;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.3);
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  margin-top: 0.25rem;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.92;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.38);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.submitBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.switchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 3rem;
+  border-radius: 9999px;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.switchBtn:hover:not(:disabled) {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.switchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.spin {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Mobile ── */
+
+@media (max-width: 480px) {
+  .card {
+    padding: 2rem 1.25rem;
+    border-radius: 1.75rem;
+    margin: 0 0.5rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+}
