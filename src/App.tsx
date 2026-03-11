@@ -10,48 +10,34 @@ import { AuthProvider, useAuth } from "./components/AuthContext";
 import { Toaster } from "./components/ui/sonner";
 import { AdminPanel } from "./components/AdminPanel";
 
-// Main app content with authentication checks
 function AppContent() {
   const [currentPage, setCurrentPage] = useState("home");
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(null);
   const [intendedPage, setIntendedPage] = useState<string | null>(null);
   const { user } = useAuth();
 
-  // Guard to avoid repeated auth redirects
   const hasQueuedAuthRef = useRef(false);
 
   useEffect(() => {
-    // Handle hash changes for navigation
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
-      if (hash) {
-        setCurrentPage(hash);
-      } else {
-        setCurrentPage("home");
-      }
+      setCurrentPage(hash || "home");
     };
-
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  // Protected pages that require authentication
   const protectedPages = ["bmi", "ai-advisor", "user-panel", "admin-panel"];
   const isProtectedPage = protectedPages.includes(currentPage);
 
-  // If user tries to access protected page without being logged in
   useEffect(() => {
     if (!isProtectedPage || user || authMode) {
-      // When not in the redirect condition, reset the guard
       hasQueuedAuthRef.current = false;
       return;
     }
-
     if (!hasQueuedAuthRef.current) {
       hasQueuedAuthRef.current = true;
-
-      // Defer state updates so they are not considered "synchronous" in the effect
       setTimeout(() => {
         setIntendedPage((prev) => prev ?? currentPage);
         setAuthMode((prev) => prev ?? "signin");
@@ -59,18 +45,11 @@ function AppContent() {
     }
   }, [currentPage, user, authMode, isProtectedPage]);
 
-  const handleSignInClick = () => {
-    setAuthMode("signin");
-  };
+  const handleSignInClick = () => setAuthMode("signin");
+  const handleSwitchToSignUp = () => setAuthMode("signup");
+  const handleSwitchToSignIn = () => setAuthMode("signin");
 
-  const handleSwitchToSignUp = () => {
-    setAuthMode("signup");
-  };
-
-  const handleSwitchToSignIn = () => {
-    setAuthMode("signin");
-  };
-
+  // Called on successful login/signup
   const handleAuthSuccess = (redirectTo?: string) => {
     setAuthMode(null);
     hasQueuedAuthRef.current = false;
@@ -80,7 +59,6 @@ function AppContent() {
       setIntendedPage(null);
       return;
     }
-    // If user was trying to access a protected page, redirect them there
     if (intendedPage) {
       window.location.hash = `#${intendedPage}`;
       setIntendedPage(null);
@@ -89,13 +67,21 @@ function AppContent() {
     window.location.hash = "#home";
   };
 
-  // Show authentication pages
+  // Called when user presses Back on auth pages — never redirects to intendedPage
+  const handleAuthDismiss = () => {
+    setAuthMode(null);
+    setIntendedPage(null);
+    hasQueuedAuthRef.current = false;
+    window.location.hash = "#home";
+  };
+
   if (authMode === "signin") {
     return (
       <>
         <SignInPage
           onSwitchToSignUp={handleSwitchToSignUp}
           onSuccess={handleAuthSuccess}
+          onBack={handleAuthDismiss}
         />
         <Toaster />
       </>
@@ -108,13 +94,13 @@ function AppContent() {
         <SignUpPage
           onSwitchToSignIn={handleSwitchToSignIn}
           onSuccess={handleAuthSuccess}
+          onBack={handleAuthDismiss}
         />
         <Toaster />
       </>
     );
   }
 
-  // Show other pages
   return (
     <>
       <div className="relative z-10">
