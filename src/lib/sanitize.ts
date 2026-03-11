@@ -1,88 +1,116 @@
 import { NextResponse } from "next/server";
 
+// ─── NoSQL injection guards ───────────────────────────────────────────────────
+
+export function assertSafeFields(
+  body: Record<string, unknown>,
+  fields: string[]
+): boolean {
+  for (const field of fields) {
+    const val = body[field];
+    if (val === undefined || val === null) continue;
+    if (typeof val === "object") return false;
+    if (typeof val === "string") {
+      if (val.trimStart().startsWith("$")) return false;
+      if (val.includes("__proto__") || val.includes("constructor")) return false;
+    }
+  }
+  return true;
+}
+
+export function assertSafeObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  for (const key of Object.keys(value as object)) {
+    if (
+      key.startsWith("$") ||
+      key === "__proto__"  ||
+      key === "constructor" ||
+      key === "prototype"
+    ) return false;
+  }
+  return true;
+}
+
 // ─── String sanitization ──────────────────────────────────────────────────────
 
-/** Strip script blocks, HTML tags, JS event attrs, dangerous control characters. */
-export function stripHtml(value: string): string {
+export function stripDangerous(value: string): string {
   return value
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
     .replace(/<[^>]*>/g, "")
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, "")
+    .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
     .replace(/javascript\s*:/gi, "")
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/data\s*:/gi, "")
+    .replace(/vbscript\s*:/gi, "")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x80-\x9F]/g, "")
     .replace(/\0/g, "")
+    .replace(/[\u202A-\u202E\u2066-\u2069\u200F\u200E\u200B-\u200D\uFEFF]/g, "")
     .trim();
 }
 
-/**
- * Sanitize a string from untrusted input.
- * Rejects non-strings, strips HTML/control chars, hard-truncates to maxLength.
- * Returns null if the result is empty after sanitization.
- */
 export function sanitizeString(value: unknown, maxLength: number): string | null {
   if (typeof value !== "string") return null;
-  if (value.length > maxLength * 4) return null;
-  const cleaned = stripHtml(value).slice(0, maxLength);
+  const cleaned = stripDangerous(value).slice(0, maxLength);
   return cleaned.length > 0 ? cleaned : null;
 }
 
-// "Reasonable" email regex — matches frontend exactly
-// Local part: 2–64 chars, letters/digits + ._+-, domain: proper labels + TLD
-export const EMAIL_RE =
-  /^(?=.{6,254}$)([A-Za-z0-9](?:[A-Za-z0-9._+-]{0,62}[A-Za-z0-9])?)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,}$/;
+// ─── Validation ───────────────────────────────────────────────────────────────
 
-/** Strict email validation — matches frontend exactly. */
 export function isValidEmail(email: string): boolean {
-  if (email.length > 254) return false;
-  const [localPart, domainPart] = email.split("@");
-  if (!localPart || !domainPart) return false;
-  if (localPart.length < 2) return false;
-  const domainLabels = domainPart.split(".");
-  if (domainLabels.length < 2) return false;
-  if (domainLabels.some((label) => label.length < 2)) return false;
-  return EMAIL_RE.test(email);
+  if (email.length < 6 || email.length > 254) return false;
+
+  const atIndex = email.lastIndexOf("@");
+  if (atIndex <= 0 || atIndex === email.length - 1) return false;
+  if (email.indexOf("@") !== atIndex) return false;
+
+  const local  = email.slice(0, atIndex);
+  const domain = email.slice(atIndex + 1);
+
+  if (local.length < 1 || local.length > 64) return false;
+  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
+  if (!/^[a-zA-Z0-9._%+\-]+$/.test(local)) return false;
+
+  if (domain.length < 4) return false;
+  if (domain.startsWith(".") || domain.endsWith(".")) return false;
+  if (domain.startsWith("-") || domain.endsWith("-")) return false;
+  if (domain.includes("..")) return false;
+
+  const labels = domain.split(".");
+  if (labels.length < 2) return false;
+
+  for (const label of labels) {
+    if (label.length < 1 || label.length > 63) return false;
+    if (!/^[a-zA-Z0-9\-]+$/.test(label)) return false;
+    if (label.startsWith("-") || label.endsWith("-")) return false;
+  }
+
+  const tld = labels[labels.length - 1];
+  return tld.length >= 2 && /^[a-zA-Z]+$/.test(tld);
 }
 
-export const PASSWORD_RE =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&^_\-+=])[A-Za-z\d@$!%*#?&^_\-+=]{8,128}$/;
-
-/**
- * Password policy: matches frontend exactly — 8–128 chars + strict requirements.
- */
+// 8–128 chars, at least one letter, at least one digit — matches frontend exactly
 export function isValidPassword(password: string): boolean {
-  return PASSWORD_RE.test(password);
+  if (typeof password !== "string") return false;
+  if (password.length < 8 || password.length > 128) return false;
+  if (/^\s+$/.test(password)) return false;
+  if (!/[a-zA-Z]/.test(password)) return false;
+  if (!/[0-9]/.test(password)) return false;
+  return true;
 }
 
-// ─── Numeric clamping ─────────────────────────────────────────────────────────
-
-/**
- * Parse + clamp a number to [min, max].
- * Returns null for NaN, Infinity, non-numeric, or out-of-range values.
- * Result is rounded to 1 decimal place.
- */
 export function clampNumber(value: unknown, min: number, max: number): number | null {
+  if (typeof value === "object") return null;
   const n = typeof value === "number" ? value : parseFloat(String(value));
-  if (!Number.isFinite(n) || isNaN(n)) return null;
+  if (!Number.isFinite(n)) return null;
   if (n < min || n > max) return null;
   return Math.round(n * 10) / 10;
 }
 
-/** Strict unit type guard — only "metric" or "imperial". */
 export function isValidUnit(value: unknown): value is "metric" | "imperial" {
   return value === "metric" || value === "imperial";
 }
 
-// ─── Body size guard ──────────────────────────────────────────────────────────
+// ─── Body guard ───────────────────────────────────────────────────────────────
 
-/**
- * Read the raw request body as text and enforce a hard byte limit.
- * Prevents oversized JSON payloads from reaching JSON.parse or MongoDB.
- *
- * Call this BEFORE req.json() on every mutating endpoint.
- *
- * @param req      Incoming Request
- * @param maxBytes Max allowed payload size in bytes
- */
 export async function safeReadBody(
   req: Request,
   maxBytes = 4096
@@ -100,8 +128,7 @@ export async function safeReadBody(
     };
   }
 
-  const byteLength = new TextEncoder().encode(text).length;
-  if (byteLength > maxBytes) {
+  if (new TextEncoder().encode(text).length > maxBytes) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -114,123 +141,79 @@ export async function safeReadBody(
   return { ok: true, text };
 }
 
-/** Safe JSON parse — returns null on any failure instead of throwing. */
 export function safeParse(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(text); } catch { return null; }
 }
 
 // ─── IP extraction ────────────────────────────────────────────────────────────
 
-// Characters never valid in an IPv4 or IPv6 address
-const INVALID_IP_CHARS = /[^a-fA-F0-9.:[\]]/;
+const VALID_IP_RE = /^[a-fA-F0-9.:[\]]+$/;
 
 function cleanIp(raw: string | null): string | null {
   if (!raw) return null;
-  const clean = raw.split(",")[0].trim(); // take first if comma-separated
-  if (!clean || INVALID_IP_CHARS.test(clean)) return null;
-  return clean;
+  const candidate = raw.split(",")[0].trim();
+  if (!candidate || candidate.length > 45) return null;
+  if (!VALID_IP_RE.test(candidate)) return null;
+  if (!candidate.includes(".") && !candidate.includes(":")) return null;
+  return candidate;
 }
 
-/**
- * Extract the real client IP.
- *
- * Priority order:
- *  1. CF-Connecting-IP  (Cloudflare — cannot be spoofed by client)
- *  2. X-Forwarded-For   (first entry = originating client)
- *  3. X-Real-IP         (Nginx)
- *  4. "unknown"         (fallback — never crashes)
- */
 export function getClientIp(req: Request): string {
   return (
     cleanIp(req.headers.get("cf-connecting-ip")) ??
-    cleanIp(req.headers.get("x-forwarded-for")) ??
-    cleanIp(req.headers.get("x-real-ip")) ??
+    cleanIp(req.headers.get("x-forwarded-for"))  ??
+    cleanIp(req.headers.get("x-real-ip"))        ??
     "unknown"
   );
 }
 
-// ─── In-memory sliding-window rate limiter ────────────────────────────────────
-//
-// Zero external dependencies. Effective for single-instance deployments.
-//
+// ─── Rate limiter ─────────────────────────────────────────────────────────────
 
-interface RateBucket {
-  count:   number;
-  resetAt: number; // epoch ms
-}
+interface RateBucket { count: number; resetAt: number; }
+const _rlStore = new Map<string, RateBucket>();
 
-const _store = new Map<string, RateBucket>();
-
-// Prune expired buckets every 5 minutes — prevents unbounded memory growth
 if (typeof setInterval !== "undefined") {
-  const timer = setInterval(() => {
+  const t = setInterval(() => {
     const now = Date.now();
-    for (const [key, bucket] of _store) {
-      if (bucket.resetAt < now) _store.delete(key);
-    }
+    for (const [k, b] of _rlStore) if (b.resetAt < now) _rlStore.delete(k);
   }, 5 * 60 * 1000);
-  if (typeof timer === "object" && "unref" in timer) (timer as NodeJS.Timeout).unref();
+  if (typeof t === "object" && "unref" in t) (t as NodeJS.Timeout).unref();
 }
 
-/**
- * Check and increment a rate-limit counter.
- *
- * @param key     
- * @param limit     Max requests allowed within the window
- * @param windowMs  Window duration in milliseconds
- */
 export function rateLimit(
-  key:      string,
-  limit:    number,
+  key: string,
+  limit: number,
   windowMs: number
 ): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
-  let bucket = _store.get(key);
-
-  if (!bucket || bucket.resetAt <= now) {
-    bucket = { count: 0, resetAt: now + windowMs };
-    _store.set(key, bucket);
+  let b = _rlStore.get(key);
+  if (!b || b.resetAt <= now) {
+    b = { count: 0, resetAt: now + windowMs };
+    _rlStore.set(key, b);
   }
-
-  bucket.count += 1;
-
+  b.count += 1;
   return {
-    allowed:   bucket.count <= limit,
-    remaining: Math.max(0, limit - bucket.count),
-    resetAt:   bucket.resetAt,
+    allowed:   b.count <= limit,
+    remaining: Math.max(0, limit - b.count),
+    resetAt:   b.resetAt,
   };
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-/** Today as "YYYY-MM-DD" in UTC. */
-export function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+export function todayUTC(): string { return new Date().toISOString().slice(0, 10); }
 
-/** Start of today at 00:00:00.000 UTC. */
 export function startOfTodayUTC(): Date {
   const d = new Date();
   d.setUTCHours(0, 0, 0, 0);
   return d;
 }
 
-/** A Date object N full days before right now. */
 export function daysAgo(n: number): Date {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 }
 
-// ─── Response helpers ─────────────────────────────────────────────────────────
-
-/** Standard rate-limit response headers. */
-export function rateLimitHeaders(
-  remaining: number,
-  resetAt:   number
-): Record<string, string> {
+export function rateLimitHeaders(remaining: number, resetAt: number): Record<string, string> {
   return {
     "X-RateLimit-Remaining": String(remaining),
     "X-RateLimit-Reset":     String(Math.ceil(resetAt / 1000)),
