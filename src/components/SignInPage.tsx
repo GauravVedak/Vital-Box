@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 import styles from "./SignInPage.module.css";
@@ -9,16 +9,17 @@ import styles from "./SignInPage.module.css";
 interface SignInPageProps {
   onSwitchToSignUp: () => void;
   onSuccess: (redirectTo?: string) => void;
+  onBack: () => void;
 }
 
-export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
+export function SignInPage({ onSwitchToSignUp, onSuccess, onBack }: SignInPageProps) {
   const [email,        setEmail]        = useState("");
   const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading,    setIsLoading]    = useState(false);
   const [error,        setError]        = useState<string | null>(null);
 
-  const { login, user } = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +57,20 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
 
   return (
     <div className={styles.root}>
-      {/* Subtle dot grid */}
       <div className={styles.grid} aria-hidden />
+      <div className={styles.orb}  aria-hidden />
 
-      {/* Glow orb */}
-      <div className={styles.orb} aria-hidden />
+      <button
+        type="button"
+        className={styles.back}
+        onClick={onBack}
+        aria-label="Back to home"
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
 
       <div className={styles.panel}>
-        {/* Wordmark */}
         <div className={styles.brand}>
           <span className={styles.brandDot} />
           <span className={styles.brandName}>Vital Box</span>
@@ -73,11 +80,8 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
         <p className={styles.sub}>Continue your health journey.</p>
 
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
-          {/* Email */}
           <div className={styles.field}>
-            <label htmlFor="si-email" className={styles.label}>
-              Email
-            </label>
+            <label htmlFor="si-email" className={styles.label}>Email</label>
             <input
               id="si-email"
               type="email"
@@ -91,11 +95,8 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
             />
           </div>
 
-          {/* Password */}
           <div className={styles.field}>
-            <label htmlFor="si-password" className={styles.label}>
-              Password
-            </label>
+            <label htmlFor="si-password" className={styles.label}>Password</label>
             <div className={styles.inputWrap}>
               <input
                 id="si-password"
@@ -115,22 +116,14 @@ export function SignInPage({ onSwitchToSignUp, onSuccess }: SignInPageProps) {
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 tabIndex={-1}
               >
-                {showPassword
-                  ? <EyeOff size={15} />
-                  : <Eye size={15} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
-          {error && (
-            <p className={styles.error} role="alert">{error}</p>
-          )}
+          {error && <p className={styles.error} role="alert">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={styles.submit}
-          >
+          <button type="submit" disabled={isLoading} className={styles.submit}>
             {isLoading
               ? <><Loader2 size={15} className={styles.spin} /> Signing in…</>
               : "Sign in"}

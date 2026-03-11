@@ -67,7 +67,6 @@ interface FitnessMetricsUpdate {
   bmiHistoryEntry?: BMIHistoryEntry; 
 }
 
-// Kept for backward compat — asAdmin is silently ignored
 interface LoginOptions {
   asAdmin?: boolean;
 }
@@ -119,12 +118,10 @@ function writeSession(u: User | null) {
   );
 }
 
-/** Placeholder shown before server sync — always role:"user" */
 function placeholderUser(s: StoredSession): User {
   return { id: s.id, name: s.name, email: s.email, role: "user" };
 }
 
-/** Parse server user — role always comes from server */
 function fromServer(data: Record<string, unknown>): User {
   return {
     id:             String(data.id    ?? ""),
@@ -140,7 +137,7 @@ function fromServer(data: Record<string, unknown>): User {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_POLL_MS = 5 * 60 * 1000; // 5 min (was 60s)
+const TOKEN_POLL_MS = 5 * 60 * 1000; 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,      setUser]      = useState<User | null>(null);
@@ -211,12 +208,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     check();
     const id = setInterval(check, TOKEN_POLL_MS);
     return () => clearInterval(id);
-  }, [user?.id]); 
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── login ─────────────────────────────────────────────────────────────────
-  // options.asAdmin is accepted for backward compat but never sent to server
   const login = useCallback(
-    async (email: string, password: string, _options?: LoginOptions): Promise<AuthResult> => {
+    async (email: string, password: string): Promise<AuthResult> => {
       try {
         const res = await fetch("/api/auth/login", {
           method:      "POST",
@@ -261,8 +257,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateFitnessMetrics = useCallback(
     async (metrics: FitnessMetricsUpdate): Promise<void> => {
       if (!user) return;
-
-      // Optimistic update — preserve server-given role
       setUser((prev) =>
         prev ? {
           ...prev,

@@ -240,7 +240,7 @@ export async function POST(req: Request) {
     const model  = ai.getGenerativeModel({ model: "gemini-flash-latest" });
     const result = await model.generateContent(prompt);
 
-    let text = result.response.text().trim()
+    const text = result.response.text().trim()
       .replace(/^```json\s*/i, "")
       .replace(/^```\s*/i, "")
       .replace(/```$/i, "")
