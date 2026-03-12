@@ -755,7 +755,13 @@
 
 /* ── Mobile ──────────────────────────────────── */
 @media (max-width: 640px) {
-  .inner { padding-top: 64px; padding-bottom: 12px; gap: 10px; }
+  .root {
+    margin-top: calc(-64px - env(safe-area-inset-bottom));
+    height: calc(100svh - (64px + env(safe-area-inset-bottom)));
+  }
+  .page { height: 100%; }
+  .inner { padding-top: 18px; padding-bottom: 10px; gap: 10px; }
+  .header { margin-top: 0; }
   .title { font-size: 1.25rem; }
   .messages { padding: 14px 13px; gap: 12px; }
   .bubbleWrap { max-width: 88%; }
