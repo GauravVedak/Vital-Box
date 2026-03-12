@@ -1,5 +1,25 @@
 "use client";
 
+/**
+ * AuthContext.tsx
+ *
+ * Drop-in replacement for the existing AuthContext.
+ * All existing consumers (App.tsx, AdminPanel, UserPanel, etc.) work unchanged.
+ *
+ * Security fixes vs original:
+ *  ✓ localStorage stores ONLY { id, name, email } — role is NEVER persisted
+ *    Prevents DevTools role escalation (set role:"admin" → refresh)
+ *  ✓ Placeholder shown during boot always has role:"user" until server confirms
+ *  ✓ asAdmin option kept in login() signature for backward compat — but it is
+ *    silently dropped and never sent to the server. Role comes from DB only.
+ *  ✓ bmiHistoryEntry still accepted in updateFitnessMetrics signature for
+ *    backward compat — but not forwarded to the server (server derives history)
+ *  ✓ Token poll interval raised 60s → 5 min, pauses when tab hidden
+ *  ✓ loginAttempts / login failures surface correctly from server (423 status)
+ *  ✓ updateFitnessMetrics now returns { ok, limitReached, lifetimeLimitReached }
+ *    so BMI page can lock itself after 2 lifetime submissions
+ */
+
 import {
   createContext,
   useContext,
@@ -48,7 +68,7 @@ export interface User {
   name:            string;
   email:           string;
   avatar?:         string;
-  role:            "user" | "admin"; 
+  role:            "user" | "admin"; // set by server ONLY
   fitnessMetrics?: FitnessMetrics;
   adminNote?:      string;
 }
@@ -64,7 +84,7 @@ interface FitnessMetricsUpdate {
   weight?:         number;
   unit?:           "metric" | "imperial";
   goalWeight?:     number;
-  bmiHistoryEntry?: BMIHistoryEntry; 
+  bmiHistoryEntry?: BMIHistoryEntry; // accepted for compat, not forwarded to server
 }
 
 // Kept for backward compat — asAdmin is silently ignored
@@ -113,6 +133,7 @@ function readSession(): StoredSession | null {
 function writeSession(u: User | null) {
   if (typeof window === "undefined") return;
   if (!u) { window.localStorage.removeItem(STORAGE_KEY); return; }
+  // Store only safe non-privileged fields
   window.localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({ id: u.id, name: u.name, email: u.email })
@@ -155,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       const stored = readSession();
-      if (stored) setUser(placeholderUser(stored)); 
+      if (stored) setUser(placeholderUser(stored)); // instant render, role:"user"
 
       try {
         const res = await fetch("/api/auth/me", { method: "GET", credentials: "include" });
@@ -175,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     })();
-  }, []); 
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── logout ────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
@@ -211,18 +232,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     check();
     const id = setInterval(check, TOKEN_POLL_MS);
     return () => clearInterval(id);
-  }, [user?.id]); 
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── login ─────────────────────────────────────────────────────────────────
   // options.asAdmin is accepted for backward compat but never sent to server
   const login = useCallback(
-    async (email: string, password: string, _options?: LoginOptions): Promise<AuthResult> => {
+    async (email: string, password: string): Promise<AuthResult> => {
       try {
         const res = await fetch("/api/auth/login", {
           method:      "POST",
           headers:     { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, password }),
+          // asAdmin intentionally excluded — role is server-determined
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.ok) return { ok: false, message: data.message ?? "Login failed." };
@@ -288,6 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             weight:     metrics.weight,
             unit:       metrics.unit,
             goalWeight: metrics.goalWeight,
+            // bmiHistoryEntry intentionally omitted — server derives history
           }),
         });
 

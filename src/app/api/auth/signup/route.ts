@@ -8,24 +8,20 @@ import {
   sanitizeString,
   isValidEmail,
   isValidPassword,
+  assertSafeFields,
   getClientIp,
   rateLimit,
   rateLimitHeaders,
 } from "../../../../lib/sanitize";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("[startup] JWT_SECRET environment variable is not set.");
-}
+if (!JWT_SECRET) throw new Error("[startup] JWT_SECRET is not set.");
 
-const ACCESS_EXPIRES_SECONDS = 60 * 60 * 24 * 7; 
-
-const GENERIC_FAIL = { ok: false, message: "Unable to create account." };
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
+const FAIL = { ok: false, message: "Unable to create account." };
 
 export async function POST(req: Request) {
-  // ── 1. IP + DDoS shield ──────────────────────────────────────────────────
   const ip = getClientIp(req);
-
   const rl = rateLimit(`signup:${ip}`, 5, 10 * 60 * 1000);
   if (!rl.allowed) {
     return NextResponse.json(
@@ -34,61 +30,52 @@ export async function POST(req: Request) {
     );
   }
 
-  // ── 2. Body size guard (2 KB max) ────────────────────────────────────────
   const bodyResult = await safeReadBody(req, 2048);
   if (!bodyResult.ok) return bodyResult.response;
 
   const body = safeParse(bodyResult.text);
   if (typeof body !== "object" || body === null || Array.isArray(body)) {
-    return NextResponse.json(GENERIC_FAIL, { status: 400 });
+    return NextResponse.json(FAIL, { status: 400 });
   }
 
   const raw = body as Record<string, unknown>;
 
-  // ── 3. Input sanitization ─────────────────────────────────────────────────
+  if (!assertSafeFields(raw, ["name", "email", "password"])) {
+    return NextResponse.json(FAIL, { status: 400 });
+  }
+
   const name     = sanitizeString(raw.name,     60);
   const email    = sanitizeString(raw.email,    254);
   const password = sanitizeString(raw.password, 128);
 
   if (!name || !email || !password) {
-    return NextResponse.json(GENERIC_FAIL, { status: 400 });
+    return NextResponse.json(FAIL, { status: 400 });
   }
 
   if (!/^[\p{L}\p{M}' \-]{1,60}$/u.test(name)) {
-    return NextResponse.json(GENERIC_FAIL, { status: 400 });
+    return NextResponse.json(FAIL, { status: 400 });
   }
 
   const emailLower = email.toLowerCase();
 
   if (!isValidEmail(emailLower)) {
-    return NextResponse.json(GENERIC_FAIL, { status: 400 });
+    return NextResponse.json(FAIL, { status: 400 });
   }
 
   if (!isValidPassword(password)) {
     return NextResponse.json(
-      {
-        ok: false,
-        message:
-          "Password must be 8–128 characters and include at least one letter and one number.",
-      },
+      { ok: false, message: "Password must be 8–128 characters with at least one letter and one number." },
       { status: 400 }
     );
   }
 
-  // ── 4. Database operations ────────────────────────────────────────────────
   try {
     const db    = await getDb("Users");
     const users = db.collection("userdata");
 
-    const existing = await users.findOne(
-      { email: emailLower },
-      { projection: { _id: 1 } }
-    );
-    if (existing) {
-      return NextResponse.json(GENERIC_FAIL, { status: 400 });
-    }
+    const existing = await users.findOne({ email: emailLower }, { projection: { _id: 1 } });
+    if (existing) return NextResponse.json(FAIL, { status: 400 });
 
-    //     Block even "unknown" IPs — prevents bypassing by stripping headers
     if (ip === "unknown") {
       return NextResponse.json(
         { ok: false, message: "Cannot verify request origin. Please try again." },
@@ -97,21 +84,17 @@ export async function POST(req: Request) {
     }
 
     const ipCount = await users.countDocuments({ signupIp: ip });
-    if (ipCount >= 3) {
-      return NextResponse.json(GENERIC_FAIL, { status: 400 });
-    }
+    if (ipCount >= 3) return NextResponse.json(FAIL, { status: 400 });
 
-    // ── 5. Create user ──────────────────────────────────────────────────────
     const passwordHash = await bcrypt.hash(password, 12);
-
-    const now = new Date();
+    const now          = new Date();
 
     const result = await users.insertOne({
       name,
-      email:     emailLower,
+      email:    emailLower,
       passwordHash,
-      role:      "user",
-      signupIp:  ip,
+      role:     "user",
+      signupIp: ip,
       createdAt: now,
       fitnessMetrics: {
         totalBmiSubmissions: 0,
@@ -124,34 +107,28 @@ export async function POST(req: Request) {
     });
 
     const userId = result.insertedId.toString();
-
-    const token = jwt.sign(
+    const token  = jwt.sign(
       { sub: userId, email: emailLower },
       JWT_SECRET as string,
-      { expiresIn: ACCESS_EXPIRES_SECONDS }
+      { expiresIn: COOKIE_MAX_AGE }
     );
 
-    const safeUser = {
-      id:             userId,
-      name,
-      email:          emailLower,
-      role:           "user",
-      fitnessMetrics: {},
-    };
-
-    const res = NextResponse.json({ ok: true, user: safeUser }, { status: 201 });
+    const res = NextResponse.json({
+      ok:   true,
+      user: { id: userId, name, email: emailLower, role: "user", fitnessMetrics: {} },
+    }, { status: 201 });
 
     res.cookies.set("access_token", token, {
       httpOnly: true,
       secure:   process.env.NODE_ENV === "production",
       sameSite: "lax",
       path:     "/",
-      maxAge:   ACCESS_EXPIRES_SECONDS,
+      maxAge:   COOKIE_MAX_AGE,
     });
 
     return res;
   } catch (err) {
-    console.error("[signup] error:", err);
-    return NextResponse.json(GENERIC_FAIL, { status: 500 });
+    console.error("[signup]", err);
+    return NextResponse.json(FAIL, { status: 500 });
   }
 }
