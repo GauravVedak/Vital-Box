@@ -462,7 +462,7 @@ export function AdminPanel() {
                 <div className={s.bulkTitle}>
                   Coach note · {selectedCount} user{selectedCount > 1 ? "s" : ""}
                 </div>
-                <div className={s.bulkSub}>This note will appear in each selected user's panel.</div>
+                <div className={s.bulkSub}>This note will appear in each selected user&apos;s panel.</div>
               </div>
               <button
                 className={s.bulkCancelBtn}

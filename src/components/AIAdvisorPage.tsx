@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { useAIGuidance, type AmazonLink } from "./useAIGuidance";
@@ -66,12 +68,11 @@ export function AIAdvisorPage() {
 
     let greeting: string;
     if (user && bmi) {
-      greeting = `Hi ${user.name} — your BMI is ${bmi.toFixed(1)} (${bmiCategory}). I'm here to help you find the right supplements for your goals. What would you like to work on?`;
+      greeting = `Hi ${user.name}, your BMI is ${bmi.toFixed(1)} (${bmiCategory}). I'm here to help you find the right supplements for your goals. What would you like to work on?`;
     } else if (user) {
       greeting = `Hi ${user.name}. I'm your AI supplement advisor. Tell me about your fitness goals and I'll tailor recommendations for you.`;
     } else {
-      greeting =
-        "Welcome. I'm your AI supplement advisor. Sign in and log your BMI for personalised recommendations, or ask me anything about fitness and supplements.";
+      greeting = "Welcome. I'm your AI supplement advisor. Sign in and log your BMI for personalised recommendations, or ask me anything about fitness and supplements.";
     }
 
     setMessages([{ id: "1", content: greeting, sender: "ai", timestamp: new Date() }]);
@@ -137,7 +138,7 @@ export function AIAdvisorPage() {
 
   const getUserInitials = () => {
     if (!user?.name) return "U";
-    return user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+    return user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
   /* ── Rich AI response rendering ── */
@@ -302,7 +303,7 @@ export function AIAdvisorPage() {
                           className={`${s.copyBtn} ${copiedId === msg.id ? s.copied : ""}`}
                           onClick={() => handleCopy(msg.id, msg.content)}
                         >
-                          {copiedId === msg.id ? <><Check />Copied</> : <><Copy />Copy</>}
+                          {copiedId === msg.id ? <><Check size={9} />Copied</> : <><Copy size={9} />Copy</>}
                         </button>
                       )}
                     </div>
@@ -312,28 +313,28 @@ export function AIAdvisorPage() {
                         {msg.amazonLinks.map((link, i) => (
                           <div key={i} className={s.productCard}>
                             <div className={s.productCardHeader}>
-                              <div className={s.productIcon}><Package /></div>
+                              <div className={s.productIcon}><Package size={11} /></div>
                               <div className={s.productTitle}>{link.searchQuery}</div>
                               <span className={s.productCategory}>{link.category}</span>
                             </div>
                             <p className={s.productPurpose}>{link.purpose}</p>
                             {link.redFlags && (
                               <div className={s.redFlagBox}>
-                                <AlertCircle />
+                                <AlertCircle size={11} />
                                 <p className={s.redFlagText}>{link.redFlags}</p>
                               </div>
                             )}
                             <a href={link.url} target="_blank" rel="noopener noreferrer" className={s.amazonBtn}>
-                              <ShoppingCart size={11} />
+                              <ShoppingCart size={10} />
                               View on Amazon
-                              <ExternalLink size={10} />
+                              <ExternalLink size={9} />
                             </a>
                           </div>
                         ))}
 
                         {msg.disclaimers && msg.disclaimers.length > 0 && (
                           <div className={s.disclaimerBox}>
-                            <Info />
+                            <Info size={11} />
                             <div className={s.disclaimerText}>
                               {msg.disclaimers.map((d, i) => <p key={i}>{d}</p>)}
                             </div>
@@ -341,7 +342,7 @@ export function AIAdvisorPage() {
                         )}
 
                         <div className={s.doctorNotice}>
-                          <Heart />
+                          <Heart size={11} />
                           <p className={s.doctorText}>
                             <strong>Consult your doctor</strong> before starting any new supplement regimen.
                           </p>
@@ -356,19 +357,19 @@ export function AIAdvisorPage() {
               {isTyping && (
                 <div className={s.thinkingRow}>
                   <div className={`${s.avatar} ${s.aiAvatar}`}>
-                    <Sparkles />
+                    <Sparkles size={13} />
                   </div>
                   <div className={s.thinkingBubble}>
                     <div className={s.thinkingDot} style={{ animationDelay: "0s" }} />
-                    <div className={s.thinkingDot} style={{ animationDelay: "0.2s" }} />
-                    <div className={s.thinkingDot} style={{ animationDelay: "0.4s" }} />
+                    <div className={s.thinkingDot} style={{ animationDelay: "0.22s" }} />
+                    <div className={s.thinkingDot} style={{ animationDelay: "0.44s" }} />
                   </div>
                 </div>
               )}
 
               {showScrollBtn && (
                 <button className={s.scrollBtn} onClick={scrollToBottom}>
-                  <ArrowDown />
+                  <ArrowDown size={12} />
                 </button>
               )}
 
@@ -384,7 +385,7 @@ export function AIAdvisorPage() {
                   onClick={() => handleQuickAction(a.query)}
                   disabled={isTyping}
                 >
-                  <a.icon />
+                  <a.icon size={11} />
                   {a.label}
                 </button>
               ))}
@@ -405,12 +406,11 @@ export function AIAdvisorPage() {
                 onClick={() => handleSend()}
                 disabled={!inputMessage.trim() || isTyping}
               >
-                <Send />
+                <Send size={15} />
               </button>
             </div>
 
           </div>
-
         </div>
       </div>
     </div>

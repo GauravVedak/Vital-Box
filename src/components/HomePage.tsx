@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import {
   ArrowRight, Activity, Brain, Shield,
@@ -9,7 +9,7 @@ import {
 import { useAuth } from "./AuthContext";
 import s from "./HomePage.module.css";
 
-/* ── Scroll reveal ── */
+/* ── Scroll reveal ────────────────────────────────────────── */
 function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -36,77 +36,63 @@ function Reveal({ children, stagger = false, className = "" }: {
   );
 }
 
-/* ── App preview card ── */
-function AppPreviewCard() {
-  const supplements = [
-    { name: "Vitamin D3",          dose: "2,000 IU", match: 96, color: "#10b981" },
-    { name: "Magnesium Glycinate", dose: "400 mg",   match: 89, color: "#34d399" },
-    { name: "Omega-3 Fish Oil",    dose: "1,000 mg", match: 84, color: "#059669" },
-  ];
+/* ── 3D tilt card — rAF lerp, pure CSS perspective ────────── */
+function TiltCard({ children }: { children: React.ReactNode }) {
+  const ref    = useRef<HTMLDivElement>(null);
+  const target = useRef({ rx: 0, ry: 0 });
+  const curr   = useRef({ rx: 0, ry: 0 });
+ const raf = useRef<number>(0);
+const tickRef = useRef<() => void>(() => {});
+
+const tick = useCallback(() => {
+  const el = ref.current;
+
+  if (!el) {
+    raf.current = requestAnimationFrame(tickRef.current);
+    return;
+  }
+
+  curr.current.rx += (target.current.rx - curr.current.rx) * 0.09;
+  curr.current.ry += (target.current.ry - curr.current.ry) * 0.09;
+
+  el.style.transform =
+    `perspective(900px) rotateX(${curr.current.rx.toFixed(2)}deg) rotateY(${curr.current.ry.toFixed(2)}deg) translateZ(0)`;
+
+  raf.current = requestAnimationFrame(tickRef.current);
+}, []);
+
+  useEffect(() => {
+  tickRef.current = tick;
+}, [tick]);
+
+useEffect(() => {
+  raf.current = requestAnimationFrame(tickRef.current);
+  return () => cancelAnimationFrame(raf.current);
+}, [tick]);
+
   return (
-    <div className={s.appCard}>
-      <div className={s.appCardHeader}>
-        <div className={s.appCardHeaderLeft}>
-          <div className={s.appCardDot} />
-          <span className={s.appCardTitle}>Your AI Plan</span>
-        </div>
-        <span className={s.appCardBadge}>Safety Verified</span>
-      </div>
-
-      <div className={s.appCardBmi}>
-        <div className={s.appCardBmiLeft}>
-          <span className={s.appCardBmiLabel}>BMI</span>
-          <span className={s.appCardBmiValue}>22.4</span>
-        </div>
-        <div className={s.appCardBmiRight}>
-          <div className={s.appCardBmiTrack}>
-            <div className={s.appCardBmiFill} />
-            <div className={s.appCardBmiMarker} />
-          </div>
-          <div className={s.appCardBmiRange}>
-            <span>Under</span>
-            <span className={s.appCardBmiHealthy}>Healthy</span>
-            <span>Obese</span>
-          </div>
-        </div>
-      </div>
-
-      <div className={s.appCardList}>
-        {supplements.map((sup) => (
-          <div key={sup.name} className={s.appCardItem}>
-            <div className={s.appCardItemLeft}>
-              <div className={s.appCardItemDot} style={{ background: sup.color }} />
-              <div>
-                <div className={s.appCardItemName}>{sup.name}</div>
-                <div className={s.appCardItemDose}>{sup.dose} daily</div>
-              </div>
-            </div>
-            <div className={s.appCardItemRight}>
-              <span className={s.appCardItemPct} style={{ color: sup.color }}>{sup.match}%</span>
-              <div className={s.appCardItemBarTrack}>
-                <div
-                  className={s.appCardItemBarFill}
-                  style={{ width: `${sup.match}%`, background: sup.color }}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className={s.appCardFooter}>
-        <Shield size={11} />
-        <span>Checked against medical safety criteria</span>
-      </div>
+    <div
+      ref={ref}
+      className={s.appCard}
+      onMouseMove={(e) => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (!rect) return;
+        const dx = (e.clientX - rect.left  - rect.width  / 2) / (rect.width  / 2);
+        const dy = (e.clientY - rect.top   - rect.height / 2) / (rect.height / 2);
+        target.current = { rx: -dy * 7, ry: dx * 7 };
+      }}
+      onMouseLeave={() => { target.current = { rx: 0, ry: 0 }; }}
+    >
+      {children}
     </div>
   );
 }
 
-/* ── Interactive dot grid — tuned for white background ── */
+/* ── Dot grid — faint grey on white, bloom to emerald ─────── */
 function DotGrid() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouse = useRef({ x: -9999, y: -9999 });
-  const raf = useRef<number>(0);
+  const mouse     = useRef({ x: -9999, y: -9999 });
+  const raf       = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,105 +100,154 @@ function DotGrid() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const SPACING    = 32;
-    const RADIUS     = 1.0;
-    const REACH      = 130;
-    const LIFT       = 3;
-    const BASE_ALPHA = 0.09;   // visible but quiet on white
-    const PEAK_ALPHA = 0.44;
-
+    const SP = 34, R = 1.0, REACH = 130, LIFT = 3;
+    const BA = 0.07, PA = 0.42;
     let cols = 0, rows = 0, W = 0, H = 0;
 
-    function resize() {
+    const resize = () => {
       if (!canvas) return;
-      W = canvas.offsetWidth;
-      H = canvas.offsetHeight;
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width  = W * dpr;
-      canvas.height = H * dpr;
+      W = canvas.offsetWidth; H = canvas.offsetHeight;
+      const dpr = devicePixelRatio || 1;
+      canvas.width = W * dpr; canvas.height = H * dpr;
       ctx.scale(dpr, dpr);
-      cols = Math.ceil(W / SPACING) + 1;
-      rows = Math.ceil(H / SPACING) + 1;
-    }
+      cols = Math.ceil(W / SP) + 1;
+      rows = Math.ceil(H / SP) + 1;
+    };
 
-    function draw() {
+    const draw = () => {
       if (!canvas || !ctx) return;
       ctx.clearRect(0, 0, W, H);
-      const mx = mouse.current.x;
-      const my = mouse.current.y;
-
+      const { x: mx, y: my } = mouse.current;
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          const bx = c * SPACING;
-          const by = r * SPACING;
-          const dx = mx - bx;
-          const dy = my - by;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const bx = c * SP, by = r * SP;
+          const dx = mx - bx, dy = my - by;
+          const dist = Math.sqrt(dx*dx + dy*dy);
           const t = Math.max(0, 1 - dist / REACH);
-
-          const nx = bx + (dist > 0 ? (dx / dist) * LIFT * t : 0);
-          const ny = by + (dist > 0 ? (dy / dist) * LIFT * t : 0);
-          const alpha = BASE_ALPHA + (PEAK_ALPHA - BASE_ALPHA) * t * t;
-
-          // Neutral grey at rest → pure emerald on hover
-          const rCh = Math.round(178 - 162 * t); // 178 → 16
-          const gCh = Math.round(178 + 7 * t);   // 178 → 185
-          const bCh = Math.round(190 - 61 * t);  // 190 → 129
-
+          const nx = bx + (dist > 0 ? (dx/dist)*LIFT*t : 0);
+          const ny = by + (dist > 0 ? (dy/dist)*LIFT*t : 0);
+          const a  = BA + (PA - BA) * t * t;
+          const rC = Math.round(178 - 162*t);
+          const gC = Math.round(178 + 7*t);
+          const bC = Math.round(190 - 61*t);
           ctx.beginPath();
-          ctx.arc(nx, ny, RADIUS + t * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${rCh},${gCh},${bCh},${alpha.toFixed(3)})`;
+          ctx.arc(nx, ny, R + t*0.8, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${rC},${gC},${bC},${a.toFixed(3)})`;
           ctx.fill();
         }
       }
       raf.current = requestAnimationFrame(draw);
-    }
+    };
 
-    const onMouseMove = (e: MouseEvent) => {
+    const onMove  = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouse.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     };
-    const onMouseLeave = () => { mouse.current = { x: -9999, y: -9999 }; };
+    const onLeave = () => { mouse.current = { x: -9999, y: -9999 }; };
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
-    resize();
-    draw();
-
-    const parent = canvas.parentElement;
-    parent?.addEventListener("mousemove", onMouseMove);
-    parent?.addEventListener("mouseleave", onMouseLeave);
-
+    resize(); draw();
+    canvas.parentElement?.addEventListener("mousemove", onMove);
+    canvas.parentElement?.addEventListener("mouseleave", onLeave);
     return () => {
-      cancelAnimationFrame(raf.current);
-      ro.disconnect();
-      parent?.removeEventListener("mousemove", onMouseMove);
-      parent?.removeEventListener("mouseleave", onMouseLeave);
+      cancelAnimationFrame(raf.current); ro.disconnect();
+      canvas.parentElement?.removeEventListener("mousemove", onMove);
+      canvas.parentElement?.removeEventListener("mouseleave", onLeave);
     };
   }, []);
 
   return <canvas ref={canvasRef} className={s.dotGrid} aria-hidden />;
 }
 
-/* ── Data ── */
+function AppPreviewCard() {
+  const recs = [
+    { name: "Vitamin D3",          dose: "2,000 IU", match: 96, color: "#10b981" },
+    { name: "Magnesium Glycinate", dose: "400 mg",   match: 89, color: "#34d399" },
+    { name: "Omega-3 EPA/DHA",     dose: "1,000 mg", match: 82, color: "#059669" },
+  ];
+
+  return (
+    <TiltCard>
+      <div className={s.appCardLiveBadge}>
+        <span className={s.appCardLiveDot} />
+        Live plan
+      </div>
+
+      <div className={s.appCardProfile}>
+        <div className={s.appCardProfileAvatar}>JR</div>
+        <div className={s.appCardProfileInfo}>
+          <div className={s.appCardProfileName}>Jamie R.</div>
+          <div className={s.appCardProfileMeta}>175 cm · 78 kg · Goal: fat loss</div>
+        </div>
+        <div className={s.appCardProfileBMI}>
+          <div className={s.appCardProfileBMINum}>25.5</div>
+          <div className={s.appCardProfileBMILabel}>BMI</div>
+        </div>
+      </div>
+
+      <div style={{
+        fontSize: 9, fontWeight: 700, letterSpacing: "0.09em",
+        textTransform: "uppercase", color: "var(--n400)", marginBottom: -6,
+      }}>
+        AI Recommendations
+      </div>
+
+      <div className={s.appCardList}>
+        {recs.map((r) => (
+          <div key={r.name} className={s.appCardItem}>
+            <div className={s.appCardItemLeft}>
+              <div className={s.appCardItemDot} style={{ background: r.color }} />
+              <div>
+                <div className={s.appCardItemName}>{r.name}</div>
+                <div className={s.appCardItemDose}>{r.dose} daily</div>
+              </div>
+            </div>
+            <div className={s.appCardItemRight}>
+              <span className={s.appCardItemPct} style={{ color: r.color }}>
+                {r.match}%
+              </span>
+              <div className={s.appCardItemBarTrack}>
+                <div
+                  className={s.appCardItemBarFill}
+                  style={{ width: `${r.match}%`, background: r.color }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className={s.appCardSafety}>
+        <div className={s.appCardSafetyIcon}>
+          <Shield size={11} />
+        </div>
+        <div className={s.appCardSafetyText}>
+          No dangerous interactions found, safe to combine
+        </div>
+      </div>
+    </TiltCard>
+  );
+}
+
 const steps = [
-  { num: "01", icon: Users,    title: "Log your basics",           desc: "Height, weight, age, and goals. Takes about 60 seconds. Your data stays yours." },
-  { num: "02", icon: Activity, title: "BMI snapshot",              desc: "We calculate your BMI and build a health profile tailored to your actual numbers." },
-  { num: "03", icon: Brain,    title: "AI analyses your profile",  desc: "Our models cross-reference your data against supplement safety and efficacy logic." },
-  { num: "04", icon: Package,  title: "Your plan, explained",      desc: "A clear, personalized plan you can read, question, and act on right away." },
+  { num: "01", icon: Users,    title: "Enter your health profile",  desc: "Height, weight, age, and goals. 60 seconds. Your data never leaves your account." },
+  { num: "02", icon: Activity, title: "BMI & metrics calculated",   desc: "We compute your body mass index and build a personalised health baseline." },
+  { num: "03", icon: Brain,    title: "AI cross-checks safety",     desc: "Your profile is matched against supplement efficacy data and interaction rules." },
+  { num: "04", icon: Package,  title: "You get a clear plan",       desc: "Named supplements, exact dosages, plain-English reasoning. Ask why at any time." },
 ];
 
 const features = [
-  { icon: Shield,      title: "Safety-first filtering",  desc: "Every recommendation is checked for dangerous interactions before it reaches you.",    metric: "Zero",    metricLabel: "unsafe combinations. Ever.", dark: false },
-  { icon: TrendingUp,  title: "BMI-informed guidance",   desc: "Your BMI shapes the entire logic behind your plan, not a generic starting point.",    dark: false },
-  { icon: Brain,       title: "AI that explains itself", desc: "Ask why. No black boxes, plain-language reasoning behind every suggestion.",          dark: true  },
-  { icon: Heart,       title: "Tracks you over time",    desc: "Log your metrics monthly. Your plan evolves as your body changes.",                    dark: false },
-  { icon: Zap,         title: "Results in under 2 min",  desc: "From first input to a full plan. No lengthy forms, no waiting.",                       metric: "< 2 min", metricLabel: "start to plan",        dark: false },
-  { icon: CheckCircle, title: "Medical-grade criteria",  desc: "Decision logic grounded in clinical references, not trends, not influencers.",        dark: false },
+  { icon: Shield,      title: "Interaction safety filtering",  desc: "Every combination is checked against known dangerous interactions before it reaches you.",  metric: "Zero",    metricLabel: "unsafe combos. Ever.", dark: false },
+  { icon: TrendingUp,  title: "Your BMI drives everything",    desc: "Body mass index shapes the entire recommendation, not a one-size-fits-all template.",      dark: false },
+  { icon: Brain,       title: "AI that shows its work",        desc: "Every suggestion comes with a plain-English explanation. No black boxes.",                   dark: true  },
+  { icon: Heart,       title: "Progress tracking over time",   desc: "Log monthly. Watch your plan adapt as your body and goals change.",                           dark: false },
+  { icon: Zap,         title: "Full plan in under 2 minutes",  desc: "From first input to a complete, reasoned supplement plan. No waiting, no forms.",             metric: "< 2 min", metricLabel: "start to plan",        dark: false },
+  { icon: CheckCircle, title: "Medical reference logic",       desc: "Decision rules grounded in clinical literature,  not influencer stacks, not trends.",        dark: false },
 ];
 
 const trustItems = [
-  { icon: Lock,        label: "Medical-grade safety rules" },
+  { icon: Lock,        label: "Your data stays private" },
   { icon: Shield,      label: "Zero unsafe combinations" },
   { icon: CheckCircle, label: "Clinical reference logic" },
   { icon: Brain,       label: "Explainable AI decisions" },
@@ -226,39 +261,51 @@ export function HomePage() {
   return (
     <div className={s.page}>
 
-      {/* ═══════════════ HERO ═══════════════ */}
+      {/* ══════════════ HERO ══════════════════════════════════ */}
       <section className={s.hero}>
-        {/* Soft light blooms — pure radial washes at very low opacity */}
-        <div className={`${s.orb} ${s.orb1}`} aria-hidden />
-        <div className={`${s.orb} ${s.orb2}`} aria-hidden />
-        <div className={`${s.orb} ${s.orb3}`} aria-hidden />
+        {/* ── Full-section background video ─────────────────────────────────
+            Drop hero-bg.mp4 into /public/ — fills the entire hero section.
+            The .heroVideoOverlay darkens light/white videos so they read.
+            Tweak overlay opacity in CSS to control how dark it goes.
+        ────────────────────────────────────────────────────────────────── */}
+        <video
+          className={s.heroVideo}
+          src="/hero-bg.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          aria-hidden
+        />
+        <div className={s.heroVideoOverlay} aria-hidden />
 
-        {/* Interactive dot grid */}
         <DotGrid />
-
-        {/* Hairline accent rule — Apple product page signature detail */}
         <div className={s.heroRule} aria-hidden />
 
+        {/* Navbar clearance */}
+        <div className={s.heroTopBar} />
+
+        {/* Split content */}
         <div className={s.heroInner}>
 
-          {/* LEFT — copy */}
+          {/* LEFT */}
           <motion.div
             className={s.heroLeft}
-            initial={{ opacity: 0, x: -24 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease }}
           >
-
             <h1 className={s.heroH1}>
-              Know exactly<br />
-              what your body<br />
-              <em>actually needs.</em>
+              Your BMI.<br />
+              Your goals.<br />
+              <em>Your supplement plan.</em>
             </h1>
 
             <p className={s.heroSub}>
-              Vital Box calculates your BMI, analyses your health profile,
-              and builds a personalized supplement plan grounded in medical
-              logic, not marketing.
+              Vital Box calculates your BMI, runs it through AI-powered
+              safety checks, and builds a personalised supplement plan
+              with exact dosages and plain-English reasoning in under
+              two minutes.
             </p>
 
             <div className={s.ctaRow}>
@@ -266,7 +313,7 @@ export function HomePage() {
                 className={s.ctaPrimary}
                 onClick={() => { window.location.hash = "#bmi"; }}
               >
-                Start your health profile
+                Calculate my BMI
                 <ArrowRight size={14} />
               </button>
               {user ? (
@@ -281,7 +328,7 @@ export function HomePage() {
                   className={s.ctaSecondary}
                   onClick={() => { window.location.hash = "#ai-advisor"; }}
                 >
-                  Talk to the AI
+                  Ask the AI
                 </button>
               )}
             </div>
@@ -292,36 +339,31 @@ export function HomePage() {
             </div>
           </motion.div>
 
-          {/* RIGHT — app card */}
+          {/* RIGHT — product preview card with 3D tilt */}
           <motion.div
             className={s.heroRight}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease }}
+            transition={{ duration: 0.72, delay: 0.16, ease }}
           >
             <AppPreviewCard />
           </motion.div>
-
-        </div>
-
-        {/* Scroll indicator */}
-        <div className={s.scrollHint} aria-hidden>
-          <div className={s.scrollLine} />
-          <span>Scroll to explore</span>
         </div>
       </section>
 
-      {/* Hairline bridge */}
+      {/* Bridge */}
       <div className={s.heroBridge} aria-hidden />
 
       <div className={s.body}>
 
-        {/* ═══════════════ HOW IT WORKS ═══════════════ */}
+        {/* HOW IT WORKS */}
         <div className={s.section}>
           <Reveal>
             <div className={s.sectionEyebrow}>How it works</div>
             <h2 className={s.h2}>From first log to <em>full plan</em><br />in minutes.</h2>
-            <p className={s.sectionSub}>Four clear steps. No guesswork. No generic advice.</p>
+            <p className={s.sectionSub}>
+              Four clear steps. No jargon. No guesswork.
+            </p>
           </Reveal>
           <Reveal stagger>
             <div className={s.stepsGrid}>
@@ -339,7 +381,7 @@ export function HomePage() {
           </Reveal>
         </div>
 
-        {/* ═══════════════ STAT BAND ═══════════════ */}
+        {/* STAT BAND */}
         <Reveal>
           <div className={s.statBand}>
             <div className={s.statBandInner}>
@@ -361,14 +403,14 @@ export function HomePage() {
           </div>
         </Reveal>
 
-        {/* ═══════════════ BENTO FEATURES ═══════════════ */}
+        {/* BENTO */}
         <div className={s.section}>
           <Reveal>
             <div className={s.sectionEyebrow}>What makes it different</div>
             <h2 className={s.h2}>Built around <em>your data</em>,<br />not generic advice.</h2>
             <p className={s.sectionSub}>
-              Every decision ties back to your actual numbers, <br></br>
-              not a one-size-fits-all supplement stack.
+              Every recommendation ties back to your actual numbers, <br />
+              not a one-size-fits-all stack.
             </p>
           </Reveal>
           <Reveal stagger>
@@ -392,7 +434,7 @@ export function HomePage() {
           </Reveal>
         </div>
 
-        {/* ═══════════════ TRUST STRIP ═══════════════ */}
+        {/* TRUST STRIP */}
         <Reveal>
           <div className={s.trustStrip}>
             {trustItems.map((t) => (
@@ -404,33 +446,34 @@ export function HomePage() {
           </div>
         </Reveal>
 
-        {/* ═══════════════ PHILOSOPHY STRIP ═══════════════ */}
+        {/* PHILOSOPHY */}
         <div className={s.section}>
           <Reveal>
             <div className={s.philosophyStrip}>
               <div className={s.philosophyLeft}>
                 <div className={s.sectionEyebrow}>Our philosophy</div>
                 <div className={s.philosophyQuote}>
-                  "Supplements should come from<br />
-                  <em>your data</em>, not trends."
+                  &quot;Supplements should come from
+                  <em>your data</em>, not trends.&quot;
                 </div>
               </div>
               <div className={s.philosophyRight}>
                 <p>
                   Most supplement advice is built for audiences, not individuals.
-                  Vital Box starts with what's true about your body — your height,
-                  weight, and goals — and works outward from there using AI and
-                  medical safety logic.
+                  &quot;Supplements should come from
+                    <em>your data</em>, not trends.&quot;
+                  weight, and goals, then works outward using AI and medical
+                  safety logic.
                 </p>
                 <p>
-                  No influencer stacks. No trending ingredients. Just a clear plan
-                  grounded in how your body actually works.
+                  No influencer stacks. No trending ingredients. Just a clear,
+                  reasoned plan grounded in how your body actually works.
                 </p>
                 <button
                   className={s.ctaPrimary}
                   onClick={() => { window.location.hash = "#bmi"; }}
                 >
-                  Log your BMI
+                  Calculate my BMI
                   <ArrowRight size={14} />
                 </button>
               </div>
@@ -440,7 +483,7 @@ export function HomePage() {
 
       </div>
 
-      {/* ═══════════════ DARK CTA ═══════════════ */}
+      {/* DARK CTA */}
       <section className={s.ctaSection}>
         <Reveal>
           <div className={s.ctaSectionInner}>
@@ -450,15 +493,15 @@ export function HomePage() {
               <em>Start knowing.</em>
             </h2>
             <p className={s.ctaSectionSub}>
-              Your supplement plan should come from your data, not a trending video.
-              Start with your BMI and let the AI do the rest.
+              Your supplement plan should come from your data, not a
+              trending video. Enter your BMI and let the AI do the rest.
             </p>
             <div className={s.ctaSectionActions}>
               <button
                 className={s.ctaPrimary}
                 onClick={() => { window.location.hash = "#bmi"; }}
               >
-                Generate my plan
+                Calculate my BMI
                 <ArrowRight size={14} />
               </button>
               <button
@@ -472,11 +515,10 @@ export function HomePage() {
         </Reveal>
       </section>
 
-      {/* ═══════════════ FOOTER ═══════════════ */}
+      {/* FOOTER */}
       <footer className={s.footer}>
         <div className={s.footerInner}>
           <div className={s.footerLogo}>
-            <span className={s.footerLogoDot} />
             <span className={s.footerLogoText}>Vital Box</span>
           </div>
           <p className={s.footerTagline}>Supplements that make sense for you.</p>

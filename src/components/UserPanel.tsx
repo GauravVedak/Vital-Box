@@ -7,6 +7,7 @@ import {
   useCallback,
   type FormEvent,
   type ReactNode,
+  useRef,
 } from "react";
 import {
   Activity,
@@ -66,6 +67,31 @@ type BMITipProps = {
   active?: boolean;
   payload?: TooltipPayloadItem[];
 };
+
+// Define proper User Interface to fix "Unexpected any"
+interface User {
+  name?: string;
+  adminNote?: string;
+  fitnessMetrics?: {
+    bmiHistory?: Array<{
+      date: string;
+      weight: number;
+      value: number;
+      category: string;
+    }>;
+    latestBMI?: {
+      value: number;
+      category: string;
+      weight: number;
+      height: number;
+      unit: "metric" | "imperial";
+    };
+    goalWeight?: number;
+    height?: number;
+    unit?: "metric" | "imperial";
+    lastCalculated?: string;
+  };
+}
 
 /* ─── Tooltip styles ─────────────────────────────────────────────────────── */
 const tipBox: React.CSSProperties = {
@@ -190,7 +216,7 @@ function buildInsight(
 
   if (goalWeight && weightProgress > 0) {
     const remaining = Math.abs(last - goalWeight).toFixed(1);
-    return `You're ${Math.round(weightProgress)}% of the way to your goal — ${remaining} kg to go. Keep it up.`;
+    return `You're ${Math.round(weightProgress)}% of the way to your goal, ${remaining} kg to go. Keep it up.`;
   }
 
   if (Math.abs(delta) < 0.5) {
@@ -317,6 +343,72 @@ function DotTimeline({
   );
 }
 
+/* ─── Sidebar Content ──────────────────────────────────── */
+interface SidebarContentProps {
+  user: User;
+  onBackToHome: () => void;
+  onCloseMobile: () => void;
+  onLogout: () => void;
+}
+
+function SidebarContent({ user, onBackToHome, onCloseMobile, onLogout }: SidebarContentProps) {
+  return (
+    <>
+      <div className={s.sidebarHead}>
+        <div className={s.sidebarBrand}>
+          <span className={s.brandDot} />
+          <span className={s.brandName}>Vital Box</span>
+        </div>
+        <div className={s.sidebarUser}>
+          <div className={s.avatar}>{getInitials(user?.name)}</div>
+          <div>
+            <div className={s.userName}>{user?.name ?? "User"}</div>
+            <div className={s.userRole}>Member</div>
+          </div>
+        </div>
+      </div>
+
+      <nav className={s.sidebarNav}>
+        <div className={s.navSection}>Navigation</div>
+        <button className={s.navBtn} onClick={onBackToHome}>
+          <Home size={14} />
+          Back to Home
+        </button>
+        <button
+          className={`${s.navBtn} ${s.navBtnActive}`}
+          onClick={onCloseMobile}
+        >
+          <Activity size={14} />
+          Body Stats
+        </button>
+        <div className={s.navSection} style={{ marginTop: "0.375rem" }}>
+          Quick Actions
+        </div>
+      </nav>
+
+      <div className={s.quickActions}>
+        <button
+          className={s.quickActionBtn}
+          onClick={() => {
+            onCloseMobile();
+            window.location.hash = "#ai-advisor";
+          }}
+        >
+          <Brain size={13} style={{ color: "#8b5cf6" }} />
+          AI Advisor
+        </button>
+      </div>
+
+      <div className={s.sidebarFoot}>
+        <button className={`${s.navBtn} ${s.navBtnDanger}`} onClick={onLogout}>
+          <LogOut size={14} />
+          Sign out
+        </button>
+      </div>
+    </>
+  );
+}
+
 /* ─── Main component ─────────────────────────────────────────────────────── */
 export function UserPanel() {
   const { user, logout, refreshUser } = useAuth();
@@ -389,12 +481,19 @@ export function UserPanel() {
       ? 0
       : Math.max(0, Math.min(100, (currentProgress / progressRange) * 100));
 
-  const daysSinceLastEntry = useMemo(() => {
-    if (!allChartData.length) return null;
-    return Math.floor(
-      (Date.now() - allChartData[allChartData.length - 1].timestamp) / 86_400_000,
-    );
-  }, [allChartData]);
+const nowRef = useRef<number>(0);
+
+useEffect(() => {
+  nowRef.current = Date.now();
+}, []);
+
+const daysSinceLastEntry = allChartData.length
+  ? Math.floor(
+      (new Date().getTime() -
+        allChartData[allChartData.length - 1].timestamp) /
+        86_400_000
+    )
+  : null;
 
   const insight = useMemo(
     () => buildInsight(allChartData, goalWeight, weightProgress, daysSinceLastEntry),
@@ -499,65 +598,6 @@ export function UserPanel() {
     setIsSubmitting(false);
   };
 
-  /* ── Sidebar ────────────────────────────────────────────────────────────── */
-  function SidebarContent() {
-    return (
-      <>
-        <div className={s.sidebarHead}>
-          <div className={s.sidebarBrand}>
-            <span className={s.brandDot} />
-            <span className={s.brandName}>Vital Box</span>
-          </div>
-          <div className={s.sidebarUser}>
-            <div className={s.avatar}>{getInitials(user?.name)}</div>
-            <div>
-              <div className={s.userName}>{user?.name ?? "User"}</div>
-              <div className={s.userRole}>Member</div>
-            </div>
-          </div>
-        </div>
-
-        <nav className={s.sidebarNav}>
-          <div className={s.navSection}>Navigation</div>
-          <button className={s.navBtn} onClick={handleBackToHome}>
-            <Home size={14} />
-            Back to Home
-          </button>
-          <button
-            className={`${s.navBtn} ${s.navBtnActive}`}
-            onClick={() => setIsMobileSidebarOpen(false)}
-          >
-            <Activity size={14} />
-            Body Stats
-          </button>
-          <div className={s.navSection} style={{ marginTop: "0.375rem" }}>
-            Quick Actions
-          </div>
-        </nav>
-
-        <div className={s.quickActions}>
-          <button
-            className={s.quickActionBtn}
-            onClick={() => {
-              setIsMobileSidebarOpen(false);
-              window.location.hash = "#ai-advisor";
-            }}
-          >
-            <Brain size={13} style={{ color: "#8b5cf6" }} />
-            AI Advisor
-          </button>
-        </div>
-
-        <div className={s.sidebarFoot}>
-          <button className={`${s.navBtn} ${s.navBtnDanger}`} onClick={handleLogout}>
-            <LogOut size={14} />
-            Sign out
-          </button>
-        </div>
-      </>
-    );
-  }
-
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
     <div className={s.root}>
@@ -565,7 +605,12 @@ export function UserPanel() {
       {/* Desktop sidebar */}
       {isDesktop && (
         <aside className={s.sidebar}>
-          <SidebarContent />
+          <SidebarContent 
+            user={user as User} 
+            onBackToHome={handleBackToHome} 
+            onCloseMobile={() => setIsMobileSidebarOpen(false)} 
+            onLogout={handleLogout} 
+          />
         </aside>
       )}
 
@@ -609,7 +654,7 @@ export function UserPanel() {
             </div>
           )}
 
-          {/* Stat cards — flat, fast, auto-fit grid */}
+          {/* Stat cards */}
           <div className={s.statsGrid}>
 
             {/* BMI */}
@@ -692,7 +737,7 @@ export function UserPanel() {
                 <Sparkles size={15} />
               </div>
               <div>
-                <div className={s.insightLabel}>Trend Insight</div>
+                <div className={s.insightLabel}>AI Trend Insight</div>
                 <div className={s.insightBody}>{insight}</div>
               </div>
             </div>
@@ -724,7 +769,6 @@ export function UserPanel() {
             <div className={s.sectionHead}>
               <div>
                 <div className={s.sectionTitle}>
-                  <Target size={15} style={{ color: "#10b981" }} />
                   Goal Progress
                 </div>
                 <div className={s.sectionSub}>
@@ -1079,7 +1123,12 @@ export function UserPanel() {
                 <X size={12} />
               </button>
             </div>
-            <SidebarContent />
+            <SidebarContent 
+              user={user as User} 
+              onBackToHome={handleBackToHome} 
+              onCloseMobile={() => setIsMobileSidebarOpen(false)} 
+              onLogout={handleLogout} 
+            />
           </aside>
         </>
       )}

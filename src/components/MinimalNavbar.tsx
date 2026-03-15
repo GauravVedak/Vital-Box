@@ -19,9 +19,9 @@ interface MinimalNavbarProps {
 }
 
 const navItems = [
-  { id: "home",       label: "Home",      href: "#home",       icon: Home },
-  { id: "bmi",        label: "BMI",        href: "#bmi",        icon: Activity },
-  { id: "ai-advisor", label: "AI Advisor", href: "#ai-advisor", icon: Brain },
+  { id: "home",       label: "Home",       href: "#home",       icon: Home },
+  { id: "bmi",        label: "BMI",         href: "#bmi",        icon: Activity },
+  { id: "ai-advisor", label: "AI Advisor",  href: "#ai-advisor", icon: Brain },
 ];
 
 const spring = { type: "spring", stiffness: 380, damping: 30, mass: 0.8 } as const;
@@ -82,7 +82,7 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
     <div className={s.navRoot}>
 
       {/* ═══════════════════════════════════════
-          DESKTOP — always-visible dark pill
+          DESKTOP — frosted glass pill
           ═══════════════════════════════════════ */}
       <motion.div
         className={s.desktopWrapper}
@@ -95,18 +95,14 @@ export function MinimalNavbar({ onSignInClick }: MinimalNavbarProps) {
           className={`${s.bar} ${scrolled ? s.scrolled : ""}`}
         >
 
-          {/* Logo */}
+          {/* Logo — wordmark only, no dot */}
           <button className={s.logo} onClick={() => navigate("home", "#home")}>
-            <span className={s.liveDot}>
-              <span className={s.liveDotPing} />
-              <span className={s.liveDotCore} />
-            </span>
             <span className={s.logoText}>Vital Box</span>
           </button>
 
           <div className={s.sep} />
 
-          {/* Nav links — always visible */}
+          {/* Nav links */}
           <nav className={s.navLinks}>
             {navItems.map((item) => {
               const isActive = active === item.id;

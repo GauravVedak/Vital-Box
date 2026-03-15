@@ -1,35 +1,31 @@
 /* ═══════════════════════════════════════════════════════════
    HomePage.module.css — Vital Box
-   Hero: Pure Apple white. Luminous, restrained, premium.
-   Body and everything below heroBridge: unchanged.
+   Direction: Linear × Anthropic × Apple — white canvas,
+   surgical typography, one bold accent. The body + footer
+   sections below .heroBridge are preserved exactly.
    ═══════════════════════════════════════════════════════════ */
 
-/* ══ Tokens ══════════════════════════════════════════════════ */
+/* ══ Design tokens ══════════════════════════════════════════ */
 .page {
   --a:        #10b981;
   --a-dark:   #059669;
   --a-light:  #34d399;
   --a-xlight: #ecfdf5;
-  --a-dim:    rgba(16,185,129,0.07);
-  --a-glow:   rgba(16,185,129,0.15);
 
   --n0:   #ffffff;
   --n50:  #fafafa;
-  --n100: #f4f4f6;
-  --n150: #ebebef;
-  --n200: #dcdce4;
-  --n300: #b8b8c4;
-  --n400: #8e8e9c;
-  --n500: #5c5c6a;
-  --n700: #2a2a32;
-  --n900: #111116;
+  --n100: #f5f5f7;
+  --n150: #e8e8ed;
+  --n200: #d4d4dc;
+  --n300: #b0b0bc;
+  --n400: #86868c;
+  --n500: #52525a;
+  --n700: #28282f;
+  --n900: #0f0f12;
 
-  --d0:  #08080a;
-  --d1:  #0e0e12;
-  --d2:  #141418;
-  --d3:  #1a1a20;
+  --d0:  #07070a;
+  --d1:  #0d0d11;
   --db:  rgba(255,255,255,0.065);
-  --db2: rgba(255,255,255,0.035);
 
   --r-sm:   8px;
   --r-md:   12px;
@@ -38,10 +34,9 @@
   --r-2xl:  32px;
   --r-pill: 999px;
 
-  --sh-sm:   0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
-  --sh-md:   0 4px 20px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.06);
-  --sh-dark: 0 32px 80px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.3);
-  --sh-card: 0 1px 1px rgba(0,0,0,0.04), 0 8px 28px rgba(0,0,0,0.08), 0 20px 48px rgba(0,0,0,0.06);
+  --sh-sm:   0 1px 3px rgba(0,0,0,0.06), 0 4px 14px rgba(0,0,0,0.05);
+  --sh-md:   0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05);
+  --sh-dark: 0 24px 60px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.25);
 
   font-family: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -50,118 +45,124 @@
   background: var(--n0);
 }
 
-/* ══ HERO — pure white, Apple-grade ══════════════════════════ */
+/* ══ HERO ═══════════════════════════════════════════════════ */
 .hero {
   position: relative;
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 136px 48px 96px;
   background: var(--n0);
   overflow: hidden;
+  display: grid;
+  /* Vertical thirds: tag row / main content / bottom strip */
+  grid-template-rows: auto 1fr auto;
+  align-items: stretch;
 }
 
-/* Dot grid canvas — faint grey dots on white */
+/* ── Full-section background video ────────────────────────────────────────
+   Covers the entire hero section. z-index -1 sits behind mesh + dot grid.
+   The overlay darkens white/light videos so they don't wash out text.
+   ─────────────────────────────────────────────────────────────────────── */
+.heroVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Dark overlay — critical for white/light source videos.
+   Adjust rgba alpha: 0.45 = moderate darken, 0.6 = heavy darken.
+   Also adds a subtle emerald tint via the second gradient. */
+.heroVideoOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.55) 0%,
+      rgba(255,255,255,0.42) 60%,
+      rgba(255,255,255,0.62) 100%
+    ),
+    radial-gradient(
+      ellipse 80% 60% at 50% 30%,
+      rgba(16,185,129,0.06) 0%,
+      transparent 70%
+    );
+}
+
+
+/* ── CSS mesh background — four faint ellipses, GPU only ── */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 80% 10%,
+      rgba(16,185,129,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 45% at 10% 80%,
+      rgba(16,185,129,0.045) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 55% 95%,
+      rgba(20,184,166,0.04) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 40% at 5% 5%,
+      rgba(16,185,129,0.03) 0%, transparent 55%);
+  animation: meshShift 40s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes meshShift {
+  0%   { transform: translateZ(0) translate(0,0) scale(1); }
+  33%  { transform: translateZ(0) translate(-12px,16px) scale(1.01); }
+  66%  { transform: translateZ(0) translate(10px,-12px) scale(0.99); }
+  100% { transform: translateZ(0) translate(-6px,8px) scale(1); }
+}
+
+/* ── Fine dot grid ── */
 .dotGrid {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0;
-  opacity: 0.5;
+  z-index: 2;
+  opacity: 0.4;
 }
 
-/* ─── Soft light blooms — Apple iCloud / apple.com/health style ─── */
-/* No dark orbs. Pure radial washes of colour at very low opacity.   */
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-
-/* Top-centre: the primary emerald wash bleeding in from above */
-.orb1 {
-  width: 1100px;
-  height: 700px;
-  background: radial-gradient(ellipse at 50% 30%,
-    rgba(16,185,129,0.065) 0%,
-    rgba(16,185,129,0.02)  40%,
-    transparent 68%
-  );
-  top: -260px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: bloomDrift1 36s ease-in-out infinite;
-}
-
-/* Bottom-right: a warm grey depth field */
-.orb2 {
-  width: 740px;
-  height: 740px;
-  background: radial-gradient(circle,
-    rgba(100,100,116,0.038) 0%,
-    transparent 62%
-  );
-  bottom: -200px;
-  right: -140px;
-  animation: bloomDrift2 44s ease-in-out infinite;
-}
-
-/* Upper-left: a whisper of emerald edge-light */
-.orb3 {
-  width: 560px;
-  height: 560px;
-  background: radial-gradient(circle,
-    rgba(16,185,129,0.03) 0%,
-    transparent 62%
-  );
-  top: 5%;
-  left: -160px;
-  animation: bloomDrift3 52s ease-in-out infinite;
-}
-
-@keyframes bloomDrift1 {
-  0%,100% { transform: translateX(-50%) scale(1);      opacity: 1; }
-  40%     { transform: translateX(-51%) translateY(-22px) scale(1.03); opacity: .82; }
-  72%     { transform: translateX(-49%) translateY(14px)  scale(0.98); opacity: .9; }
-}
-@keyframes bloomDrift2 {
-  0%,100% { transform: translate(0, 0) scale(1);       opacity: .7; }
-  35%     { transform: translate(-16px,-22px) scale(1.05); opacity: .45; }
-  70%     { transform: translate(-28px,-8px)  scale(0.95); opacity: .52; }
-}
-@keyframes bloomDrift3 {
-  0%,100% { transform: translate(0, 0) scale(1);       opacity: .6; }
-  42%     { transform: translate(12px,-16px) scale(1.07); opacity: .36; }
-  80%     { transform: translate(6px,-26px)  scale(0.93); opacity: .42; }
-}
-
-/* Hairline at the bottom of hero — Apple product page signature */
+/* ── Hairline bottom rule ── */
 .heroRule {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
+  bottom: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
     var(--n150) 12%,
-    rgba(16,185,129,0.28) 50%,
+    rgba(16,185,129,0.3) 50%,
     var(--n150) 88%,
     transparent 100%
   );
-  z-index: 2;
+  z-index: 4;
 }
 
-/* ── Hero split layout ─────────────────────────────────────── */
+/* ── Top bar inside hero: just a spacer row ── */
+.heroTopBar {
+  height: 88px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+}
+
+/* ── Main hero content ── */
 .heroInner {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
+  padding: 0 48px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 80px;
@@ -180,77 +181,74 @@
   align-items: center;
 }
 
-/* ── Eyebrow ─────────────────────────────────────────────── */
-/* Neutral border chip — Apple's product label style.        */
-/* No colour fill, no uppercase shouting, just clean signal. */
+/* ── Eyebrow ── */
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 5px 13px 5px 9px;
+  height: 26px;
+  padding: 0 12px 0 8px;
   border: 1px solid var(--n150);
   border-radius: var(--r-pill);
   background: var(--n0);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   color: var(--n500);
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.055);
 }
 
 .eyebrowDot {
-  width: 6px;
-  height: 6px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--a);
   flex-shrink: 0;
-  animation: dotPulse 3s ease-in-out infinite;
+  animation: dotRing 3s ease-in-out infinite;
 }
 
-@keyframes dotPulse {
-  0%,100% { box-shadow: 0 0 0 2px rgba(16,185,129,0.18); }
-  50%     { box-shadow: 0 0 0 5px rgba(16,185,129,0.07); }
+@keyframes dotRing {
+  0%,100% { box-shadow: 0 0 0 2px rgba(16,185,129,0.16); }
+  50%     { box-shadow: 0 0 0 5px rgba(16,185,129,0.06); }
 }
 
-/* ── H1 ──────────────────────────────────────────────────── */
-/* Pure near-black on white. Zero gradient.                  */
-/* Single italic keyword in emerald — solid, not painted.    */
+/* ── Headline — the new copy is product-clear ── */
 .heroH1 {
-  font-size: clamp(2.875rem, 4.8vw, 4.375rem);
+  font-size: clamp(2.625rem, 4.6vw, 4.125rem);
   font-weight: 700;
-  line-height: 1.03;
-  letter-spacing: -0.055em;
+  line-height: 1.04;
+  letter-spacing: -0.052em;
   color: var(--n900);
   margin: 0 0 22px;
 }
 
+/* Accent line: emerald, no gradient on white */
 .heroH1 em {
   font-style: normal;
   color: var(--a-dark);
 }
 
-/* ── Subtext ─────────────────────────────────────────────── */
+/* ── Subtext ── */
 .heroSub {
   font-size: 1.0625rem;
   font-weight: 400;
   line-height: 1.72;
   color: var(--n400);
-  max-width: 390px;
-  margin: 0 0 38px;
-  letter-spacing: -0.014em;
+  max-width: 400px;
+  margin: 0 0 36px;
+  letter-spacing: -0.012em;
 }
 
-/* ── CTAs ────────────────────────────────────────────────── */
+/* ── CTA row ── */
 .ctaRow {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
 }
 
-/* Primary: charcoal pill — Apple's canonical dark CTA on white */
+/* Apple dark pill on white */
 .ctaPrimary {
   display: inline-flex;
   align-items: center;
@@ -266,17 +264,17 @@
   letter-spacing: -0.02em;
   cursor: pointer;
   transition: background .14s, transform .13s, box-shadow .14s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.14), 0 4px 14px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15), 0 4px 14px rgba(0,0,0,0.1);
   -webkit-font-smoothing: antialiased;
 }
 .ctaPrimary:hover {
   background: #1c1c22;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.16), 0 8px 24px rgba(0,0,0,0.14);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 8px 24px rgba(0,0,0,0.12);
 }
 .ctaPrimary:active { transform: translateY(0); }
 
-/* Secondary: ghost pill on light */
+/* Ghost pill */
 .ctaSecondary {
   display: inline-flex;
   align-items: center;
@@ -300,64 +298,121 @@
   color: var(--n900);
 }
 
-/* ── Hero trust micro-line ───────────────────────────────── */
+/* Trust line */
 .heroTrust {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  font-weight: 400;
   color: var(--n400);
-  letter-spacing: -0.01em;
 }
 .heroTrust svg { color: var(--a); flex-shrink: 0; }
 
-/* ── Scroll hint ─────────────────────────────────────────── */
-.scrollHint {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
+/* ── Bottom metrics strip inside hero ── */
+/* Three numbers in a row — product proof at a glance */
+.heroMetrics {
+  position: relative;
   z-index: 2;
+  width: 100%;
+  border-top: 1px solid var(--n150);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.heroMetricItem {
+  flex: 1;
+  max-width: 260px;
+  padding: 28px 36px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--n300);
-  user-select: none;
+  gap: 4px;
+  border-right: 1px solid var(--n150);
+  transition: background .15s;
+}
+.heroMetricItem:hover { background: var(--n50); }
+.heroMetricItem:last-child { border-right: none; }
+
+.heroMetricNum {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--n900);
+  line-height: 1;
+}
+.heroMetricNum em {
+  font-style: normal;
+  color: var(--a-dark);
 }
 
-.scrollLine {
-  width: 1px;
-  height: 36px;
-  background: linear-gradient(to bottom, var(--a), transparent);
-  animation: scrollDrop 2.8s ease-in-out infinite;
+.heroMetricLabel {
+  font-size: 12px;
+  color: var(--n400);
+  letter-spacing: -0.01em;
+  font-weight: 400;
+  line-height: 1.45;
+  max-width: 180px;
 }
 
-@keyframes scrollDrop {
-  0%   { transform: scaleY(0); transform-origin: top; opacity: 1; }
-  60%  { transform: scaleY(1); transform-origin: top; opacity: 1; }
-  100% { transform: scaleY(1); transform-origin: top; opacity: 0; }
-}
+/* Scroll hint */
+.scrollHint { display: none; }
+.scrollLine  { display: none; }
 
-/* ══ APP PREVIEW CARD ════════════════════════════════════════ */
-/* White card on white: elevated only through layered shadow.  */
-/* No dark backgrounds. Clean light, precise borders.          */
+/* ══ APP PREVIEW CARD — light, elevated ══════════════════════ */
+/* White card on white: depth from layered shadow only */
 .appCard {
   width: 100%;
-  max-width: 360px;
+  max-width: 364px;
   background: var(--n0);
   border: 1px solid var(--n150);
-  border-radius: var(--r-2xl);
-  padding: 22px;
-  box-shadow: var(--sh-card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow:
+    0 1px 1px rgba(0,0,0,0.04),
+    0 8px 28px rgba(0,0,0,0.08),
+    0 24px 56px rgba(0,0,0,0.07);
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 14px;
+  /* 3D tilt context */
+  transform-style: preserve-3d;
+  transition: box-shadow .2s ease;
+  will-change: transform;
+  position: relative;
+}
+
+.appCard:hover {
+  box-shadow:
+    0 1px 1px rgba(0,0,0,0.05),
+    0 12px 36px rgba(0,0,0,0.1),
+    0 32px 72px rgba(0,0,0,0.09);
+}
+
+/* Floating "live" badge top-right — subtle depth */
+.appCardLiveBadge {
+  position: absolute;
+  top: -10px; right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 10px;
+  background: var(--n0);
+  border: 1px solid var(--n150);
+  border-radius: var(--r-pill);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--n400);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.appCardLiveDot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--a);
+  animation: dotRing 2.6s ease-in-out infinite;
 }
 
 .appCardHeader {
@@ -373,11 +428,10 @@
 }
 
 .appCardDot {
-  width: 7px;
-  height: 7px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--a);
-  animation: dotPulse 3s ease-in-out infinite;
+  animation: dotRing 3s ease-in-out infinite;
 }
 
 .appCardTitle {
@@ -394,91 +448,75 @@
   text-transform: uppercase;
   color: var(--a-dark);
   background: var(--a-xlight);
-  border: 1px solid rgba(16,185,129,0.2);
+  border: 1px solid rgba(16,185,129,0.18);
   border-radius: var(--r-pill);
   padding: 3px 9px;
 }
 
-/* BMI row */
-.appCardBmi {
+/* ── Profile summary row — unique to new design ── */
+.appCardProfile {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: var(--n50);
-  border-radius: var(--r-lg);
+  border-radius: 14px;
   border: 1px solid var(--n150);
 }
 
-.appCardBmiLeft {
+.appCardProfileAvatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--a-dark), var(--a));
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.appCardProfileInfo { flex: 1; min-width: 0; }
+
+.appCardProfileName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--n900);
+  letter-spacing: -0.02em;
+}
+
+.appCardProfileMeta {
+  font-size: 10.5px;
+  color: var(--n400);
+  margin-top: 1px;
+  letter-spacing: -0.01em;
+}
+
+.appCardProfileBMI {
+  text-align: right;
   flex-shrink: 0;
 }
 
-.appCardBmiLabel {
-  font-size: 8.5px;
+.appCardProfileBMINum {
+  font-size: 1.375rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--n400);
-}
-
-.appCardBmiValue {
-  font-size: 1.875rem;
-  font-weight: 700;
-  letter-spacing: -0.048em;
+  letter-spacing: -0.04em;
   color: var(--n900);
   line-height: 1;
 }
 
-.appCardBmiRight { flex: 1; }
-
-.appCardBmiTrack {
-  position: relative;
-  height: 4px;
-  background: var(--n150);
-  border-radius: 3px;
-  margin-bottom: 6px;
+.appCardProfileBMILabel {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--a-dark);
+  margin-top: 2px;
 }
 
-.appCardBmiFill {
-  position: absolute;
-  left: 0; top: 0;
-  width: 58%; height: 100%;
-  background: linear-gradient(90deg, var(--a-dark), var(--a));
-  border-radius: 3px;
-}
-
-.appCardBmiMarker {
-  position: absolute;
-  top: 50%; left: 58%;
-  transform: translate(-50%, -50%);
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--n0);
-  border: 2px solid var(--a);
-  box-shadow: 0 0 8px rgba(16,185,129,0.32);
-  animation: markerPulse 2.8s ease-in-out infinite;
-}
-
-@keyframes markerPulse {
-  0%,100% { box-shadow: 0 0 5px rgba(16,185,129,0.25); }
-  50%     { box-shadow: 0 0 14px rgba(16,185,129,0.58), 0 0 0 3px rgba(16,185,129,0.07); }
-}
-
-.appCardBmiRange {
-  display: flex;
-  justify-content: space-between;
-  font-size: 8px;
-  color: var(--n400);
-  letter-spacing: 0.02em;
-}
-
-.appCardBmiHealthy { color: var(--a-dark); font-weight: 600; }
-
-/* Supplement list */
+/* ── Recommendation list ── */
 .appCardList {
   display: flex;
   flex-direction: column;
@@ -489,10 +527,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   padding: 10px 12px;
   background: var(--n50);
-  border-radius: var(--r-md);
+  border-radius: 11px;
   border: 1px solid var(--n150);
   transition: background .12s;
 }
@@ -501,7 +539,7 @@
 .appCardItemLeft {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   min-width: 0;
 }
 
@@ -512,7 +550,7 @@
 }
 
 .appCardItemName {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--n900);
   letter-spacing: -0.02em;
@@ -524,7 +562,6 @@
 .appCardItemDose {
   font-size: 10px;
   color: var(--n400);
-  letter-spacing: -0.01em;
 }
 
 .appCardItemRight {
@@ -536,14 +573,14 @@
 }
 
 .appCardItemPct {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
 .appCardItemBarTrack {
-  width: 52px; height: 3px;
+  width: 48px; height: 3px;
   background: var(--n150);
   border-radius: 2px;
   overflow: hidden;
@@ -554,6 +591,7 @@
   border-radius: 2px;
 }
 
+/* ── Safety footer ── */
 .appCardFooter {
   display: flex;
   align-items: center;
@@ -562,9 +600,39 @@
   color: var(--n400);
   padding-top: 6px;
   border-top: 1px solid var(--n150);
-  letter-spacing: -0.01em;
 }
 .appCardFooter svg { color: var(--a); flex-shrink: 0; }
+
+/* ── Safety check row — new element ── */
+.appCardSafety {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--a-xlight);
+  border: 1px solid rgba(16,185,129,0.16);
+  border-radius: 11px;
+}
+
+.appCardSafetyIcon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--a-dark);
+  box-shadow: 0 1px 3px rgba(16,185,129,0.12);
+}
+.appCardSafetyIcon svg { width: 11px; height: 11px; }
+
+.appCardSafetyText {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--a-dark);
+  letter-spacing: -0.01em;
+}
 
 /* ══ GRADIENT BRIDGE ════════════════════════════════════════ */
 .heroBridge {
@@ -922,7 +990,7 @@
 /* ══ DARK CTA ════════════════════════════════════════════════ */
 .ctaSection {
   padding: 112px 48px;
-  background: var(--d0);
+  background: var(--n0);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -954,7 +1022,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--a);
+  color: var(--n400);
   margin-bottom: 20px;
 }
 
@@ -962,7 +1030,7 @@
   font-size: clamp(2rem, 4.5vw, 3.25rem);
   font-weight: 700;
   letter-spacing: -0.045em;
-  color: #fff;
+  color: var(--d0);
   line-height: 1.08;
   margin: 0 0 16px;
 }
@@ -978,7 +1046,7 @@
 .ctaSectionSub {
   font-size: 1rem;
   line-height: 1.68;
-  color: rgba(255,255,255,0.34);
+  color: var(--n400);
   margin: 0 0 36px;
   letter-spacing: -0.015em;
 }
@@ -993,7 +1061,7 @@
 
 /* ══ FOOTER ═════════════════════════════════════════════════ */
 .footer {
-  background: var(--d0);
+  background: var(--n100);
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
@@ -1017,19 +1085,19 @@
 .footerLogoDot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--a);
+  background: var(--n900);
 }
 
 .footerLogoText {
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: #fff;
+  color: var(--n900);
 }
 
 .footerTagline {
   font-size: 11.5px;
-  color: rgba(255,255,255,0.2);
+  color: var(--n400);
   letter-spacing: -0.01em;
   margin: 0;
 }
@@ -1038,7 +1106,7 @@
 
 .footerCopy {
   font-size: 10.5px;
-  color: rgba(255,255,255,0.12);
+  color: var(--n900);
   letter-spacing: -0.01em;
 }
 
