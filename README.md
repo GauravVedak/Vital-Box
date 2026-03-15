@@ -187,27 +187,6 @@ authentication, and secure cookie handling.
 
 ![Auth0](Auth0.png)
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/auth/register | Register new user |
-| POST | /api/auth/login | Authenticate user |
-| POST | /api/auth/refresh | Refresh access token |
-| POST | /api/auth/logout | End session |
-
------------------------------------------------------------------------
-### User
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/user/metrics | Save BMI and weight data |
-
-------------------------------------------------------------------------
-### AI
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | /api/ai/guidance | Generate supplement recommendations |
-
 ------------------------------------------------------------------------
 
 ## Security Considerations
