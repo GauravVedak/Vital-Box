@@ -1,24 +1,16 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "./AuthContext";
 import {
-  Card,
-  CardHeader,
-  CardContent,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import {
   Loader2,
-  Shield,
   Users,
   Home,
-  ChevronRight,
   CheckSquare,
   Square,
+  ChevronRight,
+  MousePointer,
 } from "lucide-react";
-
 import {
   AreaChart,
   Area,
@@ -26,9 +18,9 @@ import {
   Tooltip as RechartsTooltip,
   XAxis,
 } from "recharts";
+import s from "./AdminPanel.module.css";
 
-import "./AdminPanel.css";
-
+/* ─── Types (unchanged from original) ───────────────────────────────────── */
 type BMIHistoryEntry = {
   value: number;
   category: string;
@@ -64,21 +56,41 @@ type MiniPoint = {
 
 type FilterKey = "all" | "reached-goal" | "good-progress";
 
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
+function getInitials(name: string): string {
+  if (!name) return "?";
+  return name.split(" ").map(n => n[0] ?? "").join("").toUpperCase().slice(0, 2) || "?";
+}
+
+function computeProgress(u: AdminUser): number {
+  const history = u.fitnessMetrics?.bmiHistory ?? [];
+  const goal    = u.fitnessMetrics?.goalWeight ?? null;
+  if (!history.length || !goal) return 0;
+  const sorted  = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const start   = sorted[0].weight;
+  const current = sorted[sorted.length - 1].weight;
+  const total   = Math.abs(start - goal);
+  if (total === 0) return 100;
+  return Math.max(0, Math.min(100, (Math.abs(start - current) / total) * 100));
+}
+
+/* ─── Main component ─────────────────────────────────────────────────────── */
 export function AdminPanel() {
   const { user } = useAuth();
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [notes, setNotes] = useState<Record<string, string>>({});
+
+  /* ── State — identical to original ─────────────────────────────────────── */
+  const [users,          setUsers]          = useState<AdminUser[]>([]);
+  const [notes,          setNotes]          = useState<Record<string, string>>({});
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set());
+  const [filter,         setFilter]         = useState<FilterKey>("all");
+  const [bulkNote,       setBulkNote]       = useState("");
+  const [isBulkSaving,   setIsBulkSaving]   = useState(false);
+  const [isLoading,      setIsLoading]      = useState(true);
+  const [savingId,       setSavingId]       = useState<string | null>(null);
+  const [error,          setError]          = useState<string | null>(null);
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filter, setFilter] = useState<FilterKey>("all");
-  const [bulkNote, setBulkNote] = useState("");
-  const [isBulkSaving, setIsBulkSaving] = useState(false);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [savingId, setSavingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
+  /* ── Load users — identical to original ────────────────────────────────── */
   useEffect(() => {
     const loadUsers = async () => {
       setIsLoading(true);
@@ -132,15 +144,13 @@ export function AdminPanel() {
     }
   }, [user]);
 
+  /* ── Handlers — identical to original ──────────────────────────────────── */
   const handleBackHome = () => {
     window.location.hash = "#home";
   };
 
   const handleNoteChange = (id: string, value: string) => {
-    setNotes((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
+    setNotes((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleSaveNote = async (id: string) => {
@@ -152,7 +162,6 @@ export function AdminPanel() {
         credentials: "include",
         body: JSON.stringify({ adminNote: notes[id] ?? "" }),
       });
-
       if (!res.ok) {
         console.error("Failed to save note");
       }
@@ -183,7 +192,7 @@ export function AdminPanel() {
     setSelectedIds(new Set());
   };
 
-  // Filters: all / reached-goal / good-progress (>= 3 records and not regressing)
+  /* ── Filters — identical to original ───────────────────────────────────── */
   const filteredUsers = useMemo(() => {
     if (filter === "all") return users;
 
@@ -199,18 +208,15 @@ export function AdminPanel() {
       return users.filter((u) => {
         const fm = u.fitnessMetrics;
         const history = fm?.bmiHistory ?? [];
-        if (history.length < 3) return false; // your “actively tracking” rule
-
+        if (history.length < 3) return false;
         const sorted = [...history].sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
         );
         const first = sorted[0];
-        const last = sorted[sorted.length - 1];
-
-        const goal = fm?.goalWeight ?? last.weight;
+        const last  = sorted[sorted.length - 1];
+        const goal  = fm?.goalWeight ?? last.weight;
         const startDiff = Math.abs(first.weight - goal);
-        const endDiff = Math.abs(last.weight - goal);
-
+        const endDiff   = Math.abs(last.weight - goal);
         return endDiff <= startDiff;
       });
     }
@@ -220,13 +226,12 @@ export function AdminPanel() {
 
   const visibleIds = filteredUsers.map((u) => u.id);
   const allVisibleSelected =
-    visibleIds.length > 0 &&
-    visibleIds.every((id) => selectedIds.has(id));
+    visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
   const someVisibleSelected =
     visibleIds.some((id) => selectedIds.has(id)) && !allVisibleSelected;
-
   const selectedCount = selectedIds.size;
 
+  /* ── Bulk save — identical to original ─────────────────────────────────── */
   const handleBulkSave = async () => {
     const trimmed = bulkNote.trim();
     if (!trimmed || selectedIds.size === 0) return;
@@ -242,15 +247,12 @@ export function AdminPanel() {
           adminNote: trimmed,
         }),
       });
-
       if (!res.ok) {
         console.error("Failed to save bulk note");
       } else {
         setNotes((prev) => {
           const next = { ...prev };
-          selectedIds.forEach((id) => {
-            next[id] = trimmed;
-          });
+          selectedIds.forEach((id) => { next[id] = trimmed; });
           return next;
         });
         setBulkNote("");
@@ -263,12 +265,13 @@ export function AdminPanel() {
     }
   };
 
+  /* ── Loading / error ────────────────────────────────────────────────────── */
   if (isLoading) {
     return (
-      <div className="admin-root admin-root-loading">
-        <div className="admin-loading">
-          <Loader2 className="admin-loading-icon" />
-          <span className="admin-loading-text">Loading admin panel…</span>
+      <div className={s.rootCenter}>
+        <div className={s.loadingBox}>
+          <Loader2 className={s.loadingIcon} />
+          <span className={s.loadingText}>Loading admin panel…</span>
         </div>
       </div>
     );
@@ -276,13 +279,12 @@ export function AdminPanel() {
 
   if (error) {
     return (
-      <div className="admin-root admin-root-loading">
-        <div className="admin-error">
-          <p className="admin-error-text">{error}</p>
-          <Button variant="outline" size="sm" onClick={handleBackHome}>
-            <Home className="w-4 h-4 mr-2" />
-            Back to home
-          </Button>
+      <div className={s.rootCenter}>
+        <div className={s.errorBox}>
+          <p className={s.errorText}>{error}</p>
+          <button className={s.errorBtn} onClick={handleBackHome}>
+            <Home size={14} />Back to home
+          </button>
         </div>
       </div>
     );
@@ -290,82 +292,46 @@ export function AdminPanel() {
 
   const selectedUser = users.find((u) => u.id === selectedUserId) ?? null;
 
+  /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
-    <div className="admin-root">
-      <div className="admin-shell">
-        {/* Sidebar */}
-        <aside className="admin-sidebar admin-sidebar-narrow">
-          <div className="admin-sidebar-header">
-            <div className="admin-sidebar-id">
-              <div className="admin-sidebar-icon">
-                <Shield className="w-3.5 h-3.5 text-white" />
-              </div>
-              <div>
-                <p className="admin-sidebar-title">Admin</p>
-                <p className="admin-sidebar-subtitle">
-                  {user?.email}
-                </p>
+    <div className={s.root}>
+      <div className={s.shell}>
+
+        {/* ══ PANE 1 — USER LIST ════════════════════════════════════════════ */}
+        <div className={s.listPane}>
+
+          {/* Header */}
+          <div className={s.listHeader}>
+            <div className={s.listHeaderRow}>
+              <button className={s.backBtn} onClick={handleBackHome}>
+                <Home size={13} />Back
+              </button>
+              <div className={s.listTitleGroup}>
+                <span className={s.listTitle}>Users</span>
+                <span className={s.listCount}>{filteredUsers.length}</span>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="admin-sidebar-home-button"
-              onClick={handleBackHome}
-            >
-              Home
-            </Button>
+
+            {/* Filter chips */}
+            <div className={s.filterRow}>
+              {(["all", "reached-goal", "good-progress"] as FilterKey[]).map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`${s.chip} ${filter === f ? s.chipActive : ""}`}
+                  onClick={() => setFilter(f)}
+                >
+                  {f === "all" ? "All" : f === "reached-goal" ? "Goal reached" : "On track"}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="admin-sidebar-section-label">
-            Users
-          </div>
-
-          {/* Filters */}
-          <div className="admin-filter-bar">
+          {/* Select-all bar */}
+          <div className={s.selectBar}>
             <button
               type="button"
-              className={[
-                "admin-filter-chip",
-                filter === "all" && "admin-filter-chip--active",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => setFilter("all")}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              className={[
-                "admin-filter-chip",
-                filter === "reached-goal" && "admin-filter-chip--active",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => setFilter("reached-goal")}
-            >
-              Reached goal
-            </button>
-            <button
-              type="button"
-              className={[
-                "admin-filter-chip",
-                filter === "good-progress" && "admin-filter-chip--active",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onClick={() => setFilter("good-progress")}
-            >
-              Good progress
-            </button>
-          </div>
-
-          {/* Header row */}
-          <div className="admin-table-header">
-            <button
-              type="button"
-              className="admin-table-header-select"
+              className={s.selectAllBtn}
               onClick={() =>
                 allVisibleSelected
                   ? clearSelection()
@@ -373,185 +339,164 @@ export function AdminPanel() {
               }
             >
               {allVisibleSelected ? (
-                <CheckSquare className="admin-table-checkbox-icon" />
+                <CheckSquare size={14} style={{ color: "#111111" }} />
               ) : someVisibleSelected ? (
-                <CheckSquare className="admin-table-checkbox-icon admin-table-checkbox-icon--indeterminate" />
+                <CheckSquare size={14} style={{ color: "#111111", opacity: 0.4 }} />
               ) : (
-                <Square className="admin-table-checkbox-icon" />
+                <Square size={14} style={{ color: "#D1D5DB" }} />
               )}
+              {allVisibleSelected ? "Deselect all" : "Select all"}
             </button>
-            <span className="admin-table-header-label">User</span>
-            <span className="admin-table-header-col">Current</span>
-            <span className="admin-table-header-col">Goal</span>
-          </div>
-
-          {/* Table-like list */}
-          <div className="admin-sidebar-list admin-sidebar-list-table">
-            {filteredUsers.length === 0 ? (
-              <p className="admin-sidebar-empty">
-                No users in this view.
-              </p>
-            ) : (
-              <ul className="admin-user-list">
-                {filteredUsers.map((u) => {
-                  const isSelected = selectedIds.has(u.id);
-                  const isFocused = u.id === selectedUserId;
-                  const latestWeight =
-                    u.fitnessMetrics?.latestBMI?.weight ?? null;
-                  const goalWeight = u.fitnessMetrics?.goalWeight ?? null;
-
-                  return (
-                    <li key={u.id}>
-                      <button
-                        type="button"
-                        className={[
-                          "admin-user-row",
-                          isFocused && "admin-user-row--focused",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                        onClick={() => setSelectedUserId(u.id)}
-                      >
-                        <button
-                          type="button"
-                          className="admin-user-row-check"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSelectOne(u.id);
-                          }}
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="admin-table-checkbox-icon" />
-                          ) : (
-                            <Square className="admin-table-checkbox-icon" />
-                          )}
-                        </button>
-                        <div className="admin-user-row-main">
-                          <span className="admin-user-list-name">
-                            {u.name || u.email}
-                          </span>
-                          <span className="admin-user-list-subline">
-                            {u.email}
-                          </span>
-                        </div>
-                        <span className="admin-user-row-metric">
-                          {latestWeight != null ? `${latestWeight} kg` : "—"}
-                        </span>
-                        <span className="admin-user-row-metric">
-                          {goalWeight != null ? `${goalWeight} kg` : "—"}
-                        </span>
-                        <ChevronRight className="admin-user-list-chevron" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </aside>
-
-        {/* Right side */}
-        <main className="admin-main">
-          <div className="admin-main-inner admin-main-inner-wide">
-            <div className="admin-main-breadcrumb">
-              <Users className="w-4 h-4 text-slate-500" />
-              <span>Users & progress</span>
-            </div>
-
-            <AnimatePresence initial={false} mode="wait">
-              <motion.div
-                key={selectedUser?.id ?? "none"}
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.16 }}
-              >
-                {selectedUser ? (
-                  <UserDetailLayout
-                    user={selectedUser}
-                    note={notes[selectedUser.id] ?? ""}
-                    onChangeNote={(value) =>
-                      handleNoteChange(selectedUser.id, value)
-                    }
-                    onSaveNote={() => handleSaveNote(selectedUser.id)}
-                    saving={savingId === selectedUser.id}
-                  />
-                ) : (
-                  <div className="admin-main-empty">
-                    Select a user from the list to view details.
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Bulk panel */}
-          <AnimatePresence>
             {selectedCount > 0 && (
-              <motion.div
-                initial={{ y: 40, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 40, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="admin-bulk-panel"
-              >
-                <div className="admin-bulk-panel-inner">
-                  <div className="admin-bulk-panel-header">
-                    <span className="admin-bulk-panel-title">
-                      Coach note for {selectedCount} user
-                      {selectedCount > 1 ? "s" : ""}
-                    </span>
-                    <span className="admin-bulk-panel-subtitle">
-                      This note will appear in each selected user’s panel.
-                    </span>
-                  </div>
-                  <div className="admin-bulk-panel-body">
-                    <textarea
-                      value={bulkNote}
-                      onChange={(e) => setBulkNote(e.target.value)}
-                      rows={3}
-                      placeholder="Write a shared coach note for selected users…"
-                      className="admin-bulk-textarea-rect"
-                    />
-                    <div className="admin-bulk-panel-actions">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="admin-bulk-cancel-rect"
-                        onClick={() => {
-                          setBulkNote("");
-                          clearSelection();
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="admin-bulk-submit-rect"
-                        disabled={isBulkSaving || !bulkNote.trim()}
-                        onClick={handleBulkSave}
-                      >
-                        {isBulkSaving ? (
-                          <>
-                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                            Sending…
-                          </>
-                        ) : (
-                          "Send note"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+              <span className={s.selectedBadge}>{selectedCount} selected</span>
             )}
-          </AnimatePresence>
-        </main>
+          </div>
+
+          {/* User rows */}
+          <div className={s.listScroll}>
+            {filteredUsers.length === 0 ? (
+              <div className={s.listEmpty}>No users in this view.</div>
+            ) : (
+              filteredUsers.map((u) => {
+                const isChecked = selectedIds.has(u.id);
+                const isFocused = u.id === selectedUserId;
+                const latestWeight = u.fitnessMetrics?.latestBMI?.weight ?? null;
+                const goalW        = u.fitnessMetrics?.goalWeight ?? null;
+                const progress     = computeProgress(u);
+
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className={`${s.userRow} ${isFocused ? s.userRowSelected : ""}`}
+                    onClick={() => setSelectedUserId(u.id)}
+                  >
+                    {/* Checkbox */}
+                    <span
+                      className={`${s.rowCheck} ${isChecked ? s.rowCheckOn : ""}`}
+                      role="button"
+                      aria-label="Select user"
+                      onClick={(e) => { e.stopPropagation(); toggleSelectOne(u.id); }}
+                    >
+                      {isChecked
+                        ? <CheckSquare size={14} />
+                        : <Square size={14} />
+                      }
+                    </span>
+
+                    {/* Avatar */}
+                    <div className={`${s.avatar} ${isFocused ? s.avatarSelected : ""}`}>
+                      {getInitials(u.name || u.email)}
+                    </div>
+
+                    {/* Name / email */}
+                    <div className={s.rowBody}>
+                      <div className={s.rowName}>{u.name || u.email}</div>
+                      <div className={s.rowEmail}>{u.email}</div>
+                    </div>
+
+                    {/* Weight + mini bar */}
+                    <div className={s.rowMeta}>
+                      {latestWeight != null ? (
+                        <div className={s.rowWeights}>
+                          <span className={s.rowWeightBold}>{latestWeight}</span>
+                          {goalW != null ? ` → ${goalW}` : ""} kg
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: "0.6875rem", color: "#D1D5DB" }}>—</span>
+                      )}
+                      {latestWeight != null && goalW != null && (
+                        <div className={s.rowBar}>
+                          <div className={s.rowBarFill} style={{ width: `${progress}%` }} />
+                        </div>
+                      )}
+                    </div>
+
+                    <ChevronRight size={13} style={{ color: "#D1D5DB", flexShrink: 0 }} />
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* ══ PANE 2 — DETAIL ══════════════════════════════════════════════ */}
+        <div className={s.detailPane}>
+          {selectedUser ? (
+            <div className={s.detailInner} key={selectedUser.id}>
+
+              {/* Breadcrumb */}
+              <div className={s.breadcrumb}>
+                <Users size={13} />
+                <span>Users</span>
+                <span style={{ color: "#E5E7EB" }}>·</span>
+                <span className={s.breadcrumbActive}>{selectedUser.name || selectedUser.email}</span>
+              </div>
+
+              <UserDetailLayout
+                user={selectedUser}
+                note={notes[selectedUser.id] ?? ""}
+                onChangeNote={(value) => handleNoteChange(selectedUser.id, value)}
+                onSaveNote={() => handleSaveNote(selectedUser.id)}
+                saving={savingId === selectedUser.id}
+              />
+
+            </div>
+          ) : (
+            <div className={s.detailEmpty}>
+              <div className={s.detailEmptyIcon}><MousePointer size={20} /></div>
+              <div className={s.detailEmptyTitle}>Select a user</div>
+              <div className={s.detailEmptySub}>Choose someone from the list to view their health data and add coaching notes.</div>
+            </div>
+          )}
+        </div>
+
       </div>
+
+      {/* ══ BULK PANEL ════════════════════════════════════════════════════ */}
+      {selectedCount > 0 && (
+        <div className={s.bulkOuter}>
+          <div className={s.bulkPanel}>
+            <div className={s.bulkTopRow}>
+              <div>
+                <div className={s.bulkTitle}>
+                  Coach note · {selectedCount} user{selectedCount > 1 ? "s" : ""}
+                </div>
+                <div className={s.bulkSub}>This note will appear in each selected user&apos;s panel.</div>
+              </div>
+              <button
+                className={s.bulkCancelBtn}
+                onClick={() => { setBulkNote(""); clearSelection(); }}
+              >
+                Cancel
+              </button>
+            </div>
+            <div className={s.bulkInputRow}>
+              <textarea
+                className={s.bulkTextarea}
+                value={bulkNote}
+                onChange={(e) => setBulkNote(e.target.value)}
+                rows={2}
+                placeholder="Write a shared coach note for selected users…"
+              />
+              <button
+                className={s.bulkSendBtn}
+                disabled={isBulkSaving || !bulkNote.trim()}
+                onClick={handleBulkSave}
+              >
+                {isBulkSaving
+                  ? <><div className={s.spinner} />Sending…</>
+                  : "Send note"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+/* ─── UserDetailLayout — mirrors original structure ──────────────────────── */
 type UserDetailProps = {
   user: AdminUser;
   note: string;
@@ -560,18 +505,12 @@ type UserDetailProps = {
   saving: boolean;
 };
 
-function UserDetailLayout({
-  user,
-  note,
-  onChangeNote,
-  onSaveNote,
-  saving,
-}: UserDetailProps) {
+function UserDetailLayout({ user, note, onChangeNote, onSaveNote, saving }: UserDetailProps) {
   const latestWeight = user.fitnessMetrics?.latestBMI?.weight ?? null;
-  const goalWeight = user.fitnessMetrics?.goalWeight ?? null;
-  const bmiValue = user.fitnessMetrics?.latestBMI?.value ?? null;
-  const bmiCategory = user.fitnessMetrics?.latestBMI?.category ?? "";
-  const lastUpdated = user.fitnessMetrics?.lastCalculated
+  const goalWeight   = user.fitnessMetrics?.goalWeight ?? null;
+  const bmiValue     = user.fitnessMetrics?.latestBMI?.value ?? null;
+  const bmiCategory  = user.fitnessMetrics?.latestBMI?.category ?? "";
+  const lastUpdated  = user.fitnessMetrics?.lastCalculated
     ? new Date(user.fitnessMetrics.lastCalculated).toLocaleString()
     : "";
 
@@ -585,134 +524,112 @@ function UserDetailLayout({
     return sorted.map((entry) => {
       const d = new Date(entry.date);
       return {
-        weight: entry.weight,
-        dateLabel: d.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        }),
-        dateFull: d.toLocaleString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        weight:    entry.weight,
+        dateLabel: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        dateFull:  d.toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }),
       };
     });
   }, [bmiHistory]);
 
   return (
-    <div className="admin-detail-layout">
-      {/* Identity */}
-      <section className="admin-detail-identity">
-        <div className="admin-detail-identity-main">
-          <div className="admin-detail-name-row">
-            <h1 className="admin-detail-name">
-              {user.name || user.email}
-            </h1>
-            {user.role === "admin" && (
-              <span className="admin-detail-role-pill">
-                Admin
-              </span>
-            )}
-          </div>
-          <p className="admin-detail-email">{user.email}</p>
-          {lastUpdated && (
-            <p className="admin-detail-updated">
-              Last updated {lastUpdated}
-            </p>
-          )}
-        </div>
+    <div className={s.detailLayout}>
 
-        {bmiValue && (
-          <div className="admin-detail-bmi">
-            <div className="admin-detail-bmi-value">
-              {bmiValue.toFixed(1)}
-            </div>
-            <div className="admin-detail-bmi-meta">
-              <p className="admin-detail-bmi-label">
-                BMI • {bmiCategory}
-              </p>
-              <p className="admin-detail-bmi-sub">
-                {latestWeight != null ? `${latestWeight} kg` : "Weight —"}
-              </p>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Metrics + mini chart */}
-      <section className="admin-detail-middle">
-        <div className="admin-detail-metrics-grid">
-          <Card className="admin-detail-metric-card admin-detail-metric-card-plain">
-            <CardHeader className="admin-detail-metric-header">
-              <div className="admin-detail-metric-title-row">
-                <span className="admin-detail-metric-label">
-                  Current weight
-                </span>
+      {/* ── Identity ── */}
+      <div className={s.card}>
+        <div className={s.cardBody}>
+          <div className={s.headerRow}>
+            <div className={s.headerLeft}>
+              <div className={s.nameRow}>
+                <h1 className={s.detailName}>{user.name || user.email}</h1>
+                {user.role === "admin" && <span className={s.adminBadge}>Admin</span>}
               </div>
-            </CardHeader>
-            <CardContent className="admin-detail-metric-content">
-              <p className="admin-detail-metric-value">
-                {latestWeight != null ? `${latestWeight} kg` : "—"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="admin-detail-metric-card admin-detail-metric-card-plain">
-            <CardHeader className="admin-detail-metric-header">
-              <div className="admin-detail-metric-title-row">
-                <span className="admin-detail-metric-label">
-                  Goal weight
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="admin-detail-metric-content">
-              <p className="admin-detail-metric-value">
-                {goalWeight != null ? `${goalWeight} kg` : "—"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {miniChartData.length > 1 && (
-          <div className="admin-detail-mini-chart">
-            <div className="admin-detail-mini-chart-header">
-              <p className="admin-detail-mini-chart-label">Weight trend</p>
-              {latestWeight != null && goalWeight != null && (
-                <p className="admin-detail-mini-chart-meta">
-                  {latestWeight} kg • Goal {goalWeight} kg
-                </p>
+              <div className={s.detailEmail}>{user.email}</div>
+              {lastUpdated && (
+                <div className={s.detailUpdated}>Last updated {lastUpdated}</div>
               )}
             </div>
-            <div className="admin-detail-mini-chart-inner">
-              <ResponsiveContainer width="100%" height={90}>
-                <AreaChart data={miniChartData}>
+
+            {bmiValue != null && (
+              <div className={s.bmiPill}>
+                <div className={s.bmiNum}>{bmiValue.toFixed(1)}</div>
+                <div>
+                  <div className={s.bmiLabel}>BMI · {bmiCategory}</div>
+                  <div className={s.bmiSub}>
+                    {latestWeight != null ? `${latestWeight} kg` : "—"}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Metrics strip ── */}
+      <div className={s.metricsStrip}>
+        <div className={s.metricCell}>
+          <div className={s.metricLabel}>Current weight</div>
+          <div className={s.metricVal}>
+            {latestWeight != null
+              ? <>{latestWeight}<span className={s.metricUnit}>kg</span></>
+              : <span style={{ color: "#D1D5DB" }}>—</span>}
+          </div>
+        </div>
+        <div className={s.metricCell}>
+          <div className={s.metricLabel}>Goal weight</div>
+          <div className={s.metricVal}>
+            {goalWeight != null
+              ? <>{goalWeight}<span className={s.metricUnit}>kg</span></>
+              : <span style={{ color: "#D1D5DB" }}>—</span>}
+          </div>
+        </div>
+        <div className={s.metricCell}>
+          <div className={s.metricLabel}>Progress</div>
+          <div className={s.metricVal}>
+            {goalWeight != null && latestWeight != null
+              ? <>{Math.round(computeProgress(user))}<span className={s.metricUnit}>%</span></>
+              : <span style={{ color: "#D1D5DB" }}>—</span>}
+          </div>
+          {bmiHistory.length > 0 && (
+            <div className={s.metricSub}>{bmiHistory.length} entries</div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Weight trend chart ── */}
+      {miniChartData.length > 1 && (
+        <div className={s.card}>
+          <div className={s.cardBody}>
+            <div className={s.chartHead}>
+              <span className={s.chartHeadTitle}>Weight trend</span>
+              {latestWeight != null && goalWeight != null && (
+                <span className={s.chartHeadMeta}>{latestWeight} kg · Goal {goalWeight} kg</span>
+              )}
+            </div>
+            <div className={s.chartWrap}>
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={miniChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="adminWeightMini" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <stop offset="5%"  stopColor="#22C55E" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="#22C55E" stopOpacity={0}    />
                     </linearGradient>
                   </defs>
                   <XAxis
                     dataKey="dateLabel"
                     tickLine={false}
                     axisLine={false}
-                    tick={{ fill: "#9ca3af", fontSize: 10 }}
+                    tick={{ fill: "#9CA3AF", fontSize: 10, fontFamily: "-apple-system, system-ui" }}
+                    interval="preserveStartEnd"
                   />
                   <RechartsTooltip
-                    cursor={{ stroke: "#e5e7eb", strokeWidth: 1 }}
+                    cursor={{ stroke: "#E5E7EB", strokeWidth: 1 }}
                     content={({ active, payload }) => {
-                      if (!active || !payload || !payload.length) return null;
+                      if (!active || !payload?.length) return null;
                       const p = payload[0].payload as MiniPoint;
                       return (
-                        <div className="admin-mini-tooltip">
-                          <p className="admin-mini-tooltip-date">
-                            {p.dateFull}
-                          </p>
-                          <p className="admin-mini-tooltip-weight">
-                            {p.weight} kg
-                          </p>
+                        <div className={s.chartTooltip}>
+                          <div className={s.chartTooltipDate}>{p.dateFull}</div>
+                          <div className={s.chartTooltipVal}>{p.weight} kg</div>
                         </div>
                       );
                     }}
@@ -720,48 +637,48 @@ function UserDetailLayout({
                   <Area
                     type="monotone"
                     dataKey="weight"
-                    stroke="#10b981"
+                    stroke="#22C55E"
                     strokeWidth={2}
                     fill="url(#adminWeightMini)"
+                    dot={false}
+                    activeDot={{ r: 4, fill: "#22C55E", stroke: "#fff", strokeWidth: 2 }}
                     isAnimationActive={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
-        )}
-      </section>
-
-      {/* Single-user note */}
-      <section className="admin-detail-notes">
-        <p className="admin-detail-notes-label">
-          Coach note (this user)
-        </p>
-        <textarea
-          value={note}
-          onChange={(e) => onChangeNote(e.target.value)}
-          rows={4}
-          placeholder="Add a specific coach note for this user…"
-          className="admin-detail-notes-textarea"
-        />
-        <div className="admin-detail-notes-actions">
-          <Button
-            size="sm"
-            className="admin-detail-notes-save"
-            onClick={onSaveNote}
-            disabled={saving}
-          >
-            {saving ? (
-              <>
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Save note"
-            )}
-          </Button>
         </div>
-      </section>
+      )}
+
+      {/* ── Coach note ── */}
+      <div className={s.card}>
+        <div className={s.cardBody}>
+          <div className={s.notesEyebrow}>Coach Note</div>
+          <div className={s.notesTitle}>
+            Write a note for {user.name?.split(" ")[0] || "this user"}
+          </div>
+          <textarea
+            className={s.notesTextarea}
+            value={note}
+            onChange={(e) => onChangeNote(e.target.value)}
+            rows={4}
+            placeholder="Add a specific coach note for this user…"
+          />
+          <div className={s.notesFooter}>
+            <button
+              className={s.saveBtn}
+              onClick={onSaveNote}
+              disabled={saving}
+            >
+              {saving
+                ? <><div className={s.spinnerDark} />Saving…</>
+                : "Save note"}
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

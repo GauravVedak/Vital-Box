@@ -1,16 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
+import { Ruler, Scale } from "lucide-react";
 import { useAuth } from "../AuthContext";
 import { getBMICategoryData } from "./data";
-import {
-  Scale,
-  Ruler,
-} from "lucide-react";
+import s from "./BMICalculatorPage.module.css";
 
 interface BMICalculatorPageProps {
   onSignInClick?: () => void;
@@ -29,170 +23,291 @@ interface BMIResult {
 
 type Unit = "metric" | "imperial";
 
+function badgeClass(category: string): string {
+  if (category === "Underweight") return s.badgeBlue;
+  if (category === "Normal Weight") return s.badgeGreen;
+  if (category === "Overweight") return s.badgeOrange;
+  return s.badgeRed;
+}
+
+/** Map BMI 10–40 → 0–100% for the scale thumb */
+function bmiPct(bmi: number): number {
+  return Math.min(100, Math.max(0, ((bmi - 10) / 30) * 100));
+}
+
 export function BMICalculatorPage({ onSignInClick }: BMICalculatorPageProps) {
   const { user, updateFitnessMetrics } = useAuth();
-  const [height, setHeight] = useState("");
-  const [weight, setWeight] = useState("");
-  const [unit, setUnit] = useState<Unit>("metric");
-  const [result, setResult] = useState<BMIResult | null>(null);
+
+  const [height,       setHeight]       = useState("");
+  const [weight,       setWeight]       = useState("");
+  const [unit,         setUnit]         = useState<Unit>("metric");
+  const [result,       setResult]       = useState<BMIResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error,        setError]        = useState<string | null>(null);
 
-  const validateInputs = (): string | null => {
-    const parsedHeight = parseFloat(height);
-    const parsedWeight = parseFloat(weight);
-
-    if (isNaN(parsedHeight) || isNaN(parsedWeight) || parsedHeight <= 0 || parsedWeight <= 0) {
+  /* ── Validation ──────────────────────────────────────────────────────────── */
+  const validate = (): string | null => {
+    const h = parseFloat(height);
+    const w = parseFloat(weight);
+    if (isNaN(h) || isNaN(w) || h <= 0 || w <= 0)
       return "Please enter valid positive numbers.";
-    }
-
-    // PREVENT BAD DATA FROM EVEN HITTING BACKEND (UX)
-    const minHeight = unit === "metric" ? 50 : 20;
-    const maxHeight = unit === "metric" ? 250 : 100;
-    const minWeight = unit === "metric" ? 20 : 40;
-    const maxWeight = unit === "metric" ? 300 : 700;
-
-    if (parsedHeight < minHeight || parsedHeight > maxHeight) {
-      return `Height: ${minHeight}-${maxHeight}${unit === "metric" ? "cm" : "in"}`;
-    }
-    if (parsedWeight < minWeight || parsedWeight > maxWeight) {
-      return `Weight: ${minWeight}-${maxWeight}${unit === "metric" ? "kg" : "lbs"}`;
-    }
-
+    const minH = unit === "metric" ?  50 :  20;
+    const maxH = unit === "metric" ? 250 : 100;
+    const minW = unit === "metric" ?  20 :  40;
+    const maxW = unit === "metric" ? 300 : 700;
+    if (h < minH || h > maxH)
+      return `Height must be ${minH}–${maxH} ${unit === "metric" ? "cm" : "in"}.`;
+    if (w < minW || w > maxW)
+      return `Weight must be ${minW}–${maxW} ${unit === "metric" ? "kg" : "lbs"}.`;
     return null;
   };
 
+  /* ── Calculate ───────────────────────────────────────────────────────────── */
   const calculateBMI = async () => {
-    const validationError = validateInputs();
-    if (validationError) {
-      alert(validationError);
-      return;
-    }
+    setError(null);
+    const err = validate();
+    if (err) { setError(err); return; }
 
-    let bmi: number;
-    if (unit === "metric") {
-      const heightInMeters = parseFloat(height) / 100;
-      bmi = parseFloat(weight) / (heightInMeters * heightInMeters);
-    } else {
-      const heightInInches = parseFloat(height);
-      bmi = (parseFloat(weight) / (heightInInches * heightInInches)) * 703;
-    }
+    const h = parseFloat(height);
+    const w = parseFloat(weight);
+    const bmi = unit === "metric"
+      ? w / ((h / 100) ** 2)
+      : (w / (h ** 2)) * 703;
 
-    const rounded = Math.round(bmi * 10) / 10;
-    const categoryData = getBMICategoryData(bmi);
-
-    const bmiResult: BMIResult = { value: rounded, ...categoryData };
+    const rounded   = Math.round(bmi * 10) / 10;
+    const catData   = getBMICategoryData(bmi);
+    const bmiResult: BMIResult = { value: rounded, ...catData };
     setResult(bmiResult);
 
-    // YOUR BACKEND DOES ALL SANITIZATION + SECURITY HERE ↓
     if (user) {
       setIsSubmitting(true);
       try {
         await updateFitnessMetrics({
           latestBMI: {
-            value: bmiResult.value,
+            value:    bmiResult.value,
             category: bmiResult.category,
-            height: parseFloat(height),
-            weight: parseFloat(weight),
+            height: h,
+            weight: w,
             unit,
             date: new Date().toISOString(),
           },
-          height: parseFloat(height),
-          weight: parseFloat(weight),
+          height: h,
+          weight: w,
           unit,
         });
-      } catch (error: unknown) {
-          const errorMessage = error instanceof Error ? error.message : "Failed to save BMI data";
-          console.error("Failed to save BMI:", error);
-          alert(errorMessage);
+      } catch (e: unknown) {
+        console.error("Failed to save BMI:", e);
+        setError(e instanceof Error ? e.message : "Failed to save BMI data.");
       } finally {
         setIsSubmitting(false);
       }
-    } else if (onSignInClick) {
-      onSignInClick();
     }
   };
 
+  /* ── Split value into integer + decimal string ───────────────────────────── */
+  const bmiInt = result ? Math.floor(result.value)                               : null;
+  const bmiFrac = result ? "." + result.value.toFixed(1).split(".")[1]           : null;
+
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 relative overflow-hidden flex items-center justify-center">
-      {/* Your existing background + all JSX stays IDENTICAL */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* ... your existing background code ... */}
-      </div>
+    <div className={s.root}>
+      <div className={s.inner}>
 
-      <div className="max-w-2xl w-full mx-auto relative z-10">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-center mb-12">
-          <h1 className="text-5xl md:text-6xl mt-12 mb-4 tracking-tight" style={{ fontWeight: 700 }}>
-            <span className="text-gray-900">BMI </span>
-            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent inline-block">Calculator</span>
+        {/* Page heading */}
+        <div className={s.pageHead}>
+          <div className={s.eyebrow}>
+            <span className={s.eyebrowDot} />
+            Health Metrics
+          </div>
+          <h1 className={s.pageTitle}>
+            BMI <span className={s.pageTitleAccent}>Calculator</span>
           </h1>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white/75 backdrop-blur-2xl rounded-[2.5rem] border border-gray-300/40 shadow-2xl p-10">
-          {/* Unit Toggle - unchanged */}
-          <div className="flex justify-center gap-3 mb-10">
-            <Button variant={unit === "metric" ? "default" : "outline"} onClick={() => setUnit("metric")} className={unit === "metric" ? "bg-gradient-to-r cursor-pointer from-emerald-500 to-teal-600 text-white rounded-full px-8" : "rounded-full px-8 cursor-pointer"}>
-              Metric (cm/kg)
-            </Button>
-            <Button variant={unit === "imperial" ? "default" : "outline"} onClick={() => setUnit("imperial")} className={unit === "imperial" ? "bg-gradient-to-r cursor-pointer from-emerald-500 to-teal-600 text-white rounded-full px-8" : "rounded-full px-8 cursor-pointer"}>
-              Imperial (in/lbs)
-            </Button>
+        {/* Card */}
+        <div className={s.card}>
+
+          {/* Unit toggle */}
+          <div className={s.toggle}>
+            <button
+              className={`${s.toggleBtn} ${unit === "metric" ? s.toggleActive : ""}`}
+              onClick={() => { setUnit("metric");   setResult(null); setError(null); }}
+            >
+              Metric · cm / kg
+            </button>
+            <button
+              className={`${s.toggleBtn} ${unit === "imperial" ? s.toggleActive : ""}`}
+              onClick={() => { setUnit("imperial"); setResult(null); setError(null); }}
+            >
+              Imperial · in / lbs
+            </button>
           </div>
 
-          {/* Inputs - ADD DISABLED STATE */}
-          <div className="space-y-6 mb-8">
+          {/* Inputs */}
+          <div className={s.fields}>
             <div>
-              <Label className="flex items-center gap-2 mb-3 text-gray-700 text-base">
-                <Ruler className="w-5 h-5 text-emerald-600" />
-                Height {unit === "metric" ? "(cm)" : "(inches)"}
-              </Label>
-              <Input
+              <div className={s.fieldLabel}>
+                <Ruler size={12} className={s.fieldIcon} />
+                Height&nbsp;
+                <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>
+                  ({unit === "metric" ? "cm" : "inches"})
+                </span>
+              </div>
+              <input
                 type="number"
+                inputMode="decimal"
+                className={s.input}
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
                 placeholder={unit === "metric" ? "170" : "67"}
-                className="h-14 text-lg bg-white/90 backdrop-blur-xl border-2 border-gray-300 focus:border-emerald-500 rounded-xl"
                 disabled={isSubmitting}
               />
             </div>
+
             <div>
-              <Label className="flex items-center gap-2 mb-3 text-gray-700 text-base">
-                <Scale className="w-5 h-5 text-emerald-600" />
-                Weight {unit === "metric" ? "(kg)" : "(lbs)"}
-              </Label>
-              <Input
+              <div className={s.fieldLabel}>
+                <Scale size={12} className={s.fieldIcon} />
+                Weight&nbsp;
+                <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>
+                  ({unit === "metric" ? "kg" : "lbs"})
+                </span>
+              </div>
+              <input
                 type="number"
+                inputMode="decimal"
+                className={s.input}
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
                 placeholder={unit === "metric" ? "70" : "154"}
-                className="h-14 text-lg bg-white/90 backdrop-blur-xl border-2 border-gray-300 focus:border-emerald-500 rounded-xl"
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
-          {/* Calculate Button - ADD LOADING STATE */}
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex justify-center items-center">
-            <Button
-              onClick={calculateBMI}
-              disabled={!height || !weight || isSubmitting}
-              className="w-max-10 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl shadow-xl text-md font-semibold uppercase tracking-wider relative overflow-hidden group"
-              style={{ letterSpacing: "0.1em" }}
-            >
-              {isSubmitting ? "Saving..." : "Calculate BMI"}
-            </Button>
-          </motion.div>
+          {/* Inline error */}
+          {error && <p className={s.error}>{error}</p>}
 
-          {/* Your existing result JSX - paste it here exactly as-is */}
-          <AnimatePresence>
-            {result && (
-              // ... your entire existing result section JSX ...
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.6 }} className="mt-10">
-                {/* Your existing BMI result card JSX */}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+          {/* Calculate */}
+          <button
+            className={s.calcBtn}
+            onClick={calculateBMI}
+            disabled={!height || !weight || isSubmitting}
+          >
+            {isSubmitting ? "Saving…" : "Calculate BMI"}
+          </button>
+
+          {/* ── Result ── */}
+          {result && (
+            <>
+              <div className={s.sep} />
+
+              <div className={s.result}>
+
+                {/* Score row */}
+                <div className={s.scoreRow}>
+                  <div>
+                    <div className={s.scoreNum}>
+                      {bmiInt}
+                      <span className={s.scoreFrac}>{bmiFrac}</span>
+                    </div>
+                    <div className={s.scoreUnit}>BMI index</div>
+                  </div>
+                  <span className={`${s.badge} ${badgeClass(result.category)}`}>
+                    {result.category}
+                  </span>
+                </div>
+
+                {/* Scale bar */}
+                <div className={s.scaleWrap}>
+                  <div className={s.scaleTrack}>
+                    <div
+                      className={s.scaleThumb}
+                      style={{ left: `${bmiPct(result.value)}%` }}
+                    />
+                  </div>
+                  <div className={s.scaleLabels}>
+                    <span className={s.scaleLabel}>Under</span>
+                    <span className={s.scaleLabel}>Normal</span>
+                    <span className={s.scaleLabel}>Over</span>
+                    <span className={s.scaleLabel}>Obese</span>
+                  </div>
+                </div>
+
+                {/* Health note */}
+                <div className={s.note}>
+                  {result.aiRecommendation ?? result.healthNote}
+                </div>
+
+                {/* Info lists */}
+                <div className={s.infoGrid}>
+                  {(result.actionItems?.length ?? 0) > 0 && (
+                    <div>
+                      <p className={s.infoTitle}>Action steps</p>
+                      <ul className={s.infoList}>
+                        {result.actionItems!.map((item, i) => (
+                          <li key={i} className={s.infoItem}>
+                            <span className={s.infoDot} />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(result.lifestyleTips?.length ?? 0) > 0 && (
+                    <div>
+                      <p className={s.infoTitle}>Lifestyle tips</p>
+                      <ul className={s.infoList}>
+                        {result.lifestyleTips!.map((tip, i) => (
+                          <li key={i} className={s.infoItem}>
+                            <span className={s.infoDot} />
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {(result.healthRisks?.length ?? 0) > 0 && (
+                    <div>
+                      <p className={s.infoTitle}>Health risks</p>
+                      <ul className={s.infoList}>
+                        {result.healthRisks!.map((risk, i) => (
+                          <li key={i} className={s.infoItem}>
+                            <span className={s.infoDotRed} />
+                            {risk}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Guest CTA */}
+                {!user && onSignInClick && (
+                  <div className={s.guestCta}>
+                    <div className={s.guestCtaText}>
+                      <strong>Save your results</strong>
+                      Sign in to track progress and get AI guidance.
+                    </div>
+                    <button className={s.guestCtaBtn} onClick={onSignInClick}>
+                      Sign in
+                    </button>
+                  </div>
+                )}
+
+                {/* Saving indicator */}
+                {isSubmitting && (
+                  <div className={s.saving}>
+                    <div className={s.savingDot} />
+                    Saving to your profile…
+                  </div>
+                )}
+
+              </div>
+            </>
+          )}
+
+        </div>
       </div>
     </div>
   );
