@@ -49,28 +49,31 @@ function AppContent() {
   const handleSwitchToSignUp = () => setAuthMode("signup");
   const handleSwitchToSignIn = () => setAuthMode("signin");
 
-  // Called on successful login/signup
   const handleAuthSuccess = (redirectTo?: string) => {
     setAuthMode(null);
     hasQueuedAuthRef.current = false;
 
     if (redirectTo) {
+      setCurrentPage(redirectTo);
       window.location.hash = `#${redirectTo}`;
       setIntendedPage(null);
       return;
     }
     if (intendedPage) {
+      setCurrentPage(intendedPage);
       window.location.hash = `#${intendedPage}`;
       setIntendedPage(null);
       return;
     }
+    setCurrentPage("home");
     window.location.hash = "#home";
   };
 
-  // Called when user presses Back on auth pages — never redirects to intendedPage
+  // User dismissed auth without logging in — go home, never redirect to intendedPage
   const handleAuthDismiss = () => {
     setAuthMode(null);
     setIntendedPage(null);
+    setCurrentPage("home");
     hasQueuedAuthRef.current = false;
     window.location.hash = "#home";
   };
